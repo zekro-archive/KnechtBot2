@@ -118,6 +118,7 @@ exports.removebot = (ubot) ->
 Changes the nicknames of users if they get or lose a role
 entered in main's 'exports.rolepres' map with the set
 prefix.
+Also adding and removing staff role.
 ###
 exports.rolepres = (after, before) ->
     if before.roles.length < after.roles.length
@@ -125,9 +126,11 @@ exports.rolepres = (after, before) ->
             if !(r in before.roles)
                 if r of main.rolepres
                     after.edit {nick: "#{main.rolepres[r]} #{if after.nick != null then after.nick else after.username}"}
+                    bot.addGuildMemberRole after.guild.id, after.id, "373081803487182849"
     else if before.roles.length > after.roles.length
         for r in before.roles
                 if !(r in after.roles)
                     if r of main.rolepres
                         try after.edit {nick: "#{after.nick.substring 2, after.nick.length}"}
                         catch e then console.log e
+                        bot.removeGuildMemberRole after.guild.id, after.id, "373081803487182849"
