@@ -1,0 +1,12 @@
+{
+    "token": "YOUR PRIVATE DISCORD ACCOUNT TOKEN HERE",
+    "prefix": "!",
+
+    "mysql": 
+    {
+        "host": "localhost",
+        "user": "root",
+        "passwd": "",
+        "database": "knecht"
+    }
+}

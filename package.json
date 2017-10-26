@@ -1,0 +1,29 @@
+{
+    "name": "knechtBot V2",
+    "version": "2.0.0",
+    "description": "",
+    "keywords": [""],
+    "license": "MIT",
+    "main": "main.js",
+    "author": "zekro Development",
+    "repository": {
+      "type": "git",
+      "url": ""
+    },
+    "scripts": {
+      "start": "node main.js"
+    },
+    "bugs": {
+      "url": ""
+    },
+    "engines": {
+      "node": ">=6.0.0"
+    },
+    "dependencies": {
+      "eris": "^0.7.0",
+      "coffee-script": "^1.12.7",
+      "after-load": "^1.0.4",
+      "mysql": "^2.15.0"
+    },
+    "devDependencies": {}
+  }
