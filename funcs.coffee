@@ -36,6 +36,17 @@ exports.checkPerm = (memb, lvl) ->
 
 
 ###
+Getting maximum permission level of user.
+###
+exports.getPerm = (memb) ->
+    maxperm = 0
+    for rid in memb.roles
+        if rid of main.perms
+            perm = main.perms[rid]
+            maxperm = if perm > maxperm then perm else maxperm
+    return maxperm
+
+###
 Sending welcome message to (new) member.
 ###
 exports.welcome = (memb) ->

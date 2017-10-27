@@ -24,11 +24,16 @@ var PREFIX  = config["prefix"];
 const COMMANDS = {
     "test": cmds.test,
     "help": cmds.help,
-    "info": cmds.help,
+    "info": cmds.info,
     "say": cmds.say,
     "dev": cmds.dev,
     "invite": cmds.invite,
     "prefix": cmds.prefix,
+    "github": cmds.github,
+    "git": cmds.github,
+    "user": cmds.user,
+    "profile": cmds.user,
+    "userinfo": cmds.user,
 }
 
 // Permission roles and their level
@@ -53,7 +58,7 @@ const Color = {
     orange: 0xe54602
 }
 
-const VERSION = "2.1.0";
+const VERSION = "2.1.3";
 
 // Setting up mysql connectipn properties from config file
 exports.dbcon = mysql.createConnection({
@@ -114,7 +119,11 @@ bot.on('messageCreate', (msg) => {
         var args = cont.split(" ").slice(1);
         console.log(`[CMD] [${msg.member.username} (${msg.member.id})] '${msg.content}'`);
         if (invoke in COMMANDS) {
-            COMMANDS[invoke](msg, args);
+            try {
+                COMMANDS[invoke](msg, args);
+            } catch (err) {
+                sendEmbed(msg.channel, `Following error occured while executing command:\`\`\`\n${err}\n\`\`\``, "Error", Color.red)      
+            }
         }
     }
 });
@@ -198,8 +207,9 @@ function getTime() {
 exports.sendEmbed = sendEmbed;
 exports.getTime = getTime;
 exports.color = Color;
-exports.commands = COMMANDS
-exports.perms = PERMS
+exports.commands = COMMANDS;
+exports.perms = PERMS;
+exports.version = VERSION;
 
 // Connect bot
 bot.connect().catch(err => console.log(`[ERROR] Logging in failed!\n ${err}`));
