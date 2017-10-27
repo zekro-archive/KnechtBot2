@@ -22,18 +22,19 @@ var PREFIX  = config["prefix"];
 
 // Commands list with invokes
 const COMMANDS = {
-    "test": cmds.test,
-    "help": cmds.help,
-    "info": cmds.info,
-    "say": cmds.say,
-    "dev": cmds.dev,
-    "invite": cmds.invite,
-    "prefix": cmds.prefix,
-    "github": cmds.github,
-    "git": cmds.github,
-    "user": cmds.user,
-    "profile": cmds.user,
-    "userinfo": cmds.user,
+    "test":     [cmds.test, "just for testing"],
+    "help":     [cmds.help, "get this message"],
+    "info":     [cmds.info, "get information about this bot"],
+    "say":      [cmds.say, "send messages with the bot (also embeds)"],
+    "dev":      [cmds.dev, "get dev language roles"],
+    "invite":   [cmds.invite, "invite a user bot"],
+    "prefix":   [cmds.prefix, "set prefies of your bot(s) or list them of all bots"],
+    "github":   [cmds.github, "link your github profile with discord or list all links"],
+    "git":      [cmds.github, "*alias for `github`*"],
+    "user":     [cmds.user, "get users profile"],
+    "profile":  [cmds.user, "*alias for `user`*"],
+    "userinfo": [cmds.user, "*alias for `user`*"],
+    "id":       [cmds.getid, "get ids of elements by search query"],
 }
 
 // Permission roles and their level
@@ -117,10 +118,13 @@ bot.on('messageCreate', (msg) => {
     if (cont.startsWith(PREFIX) && cont.length > PREFIX.length) {
         var invoke = cont.split(" ")[0].substr(PREFIX.length);
         var args = cont.split(" ").slice(1);
-        console.log(`[CMD] [${msg.member.username} (${msg.member.id})] '${msg.content}'`);
+        try {
+            console.log(`[CMD] [${msg.member.username} (${msg.member.id})] '${msg.content}'`);
+        }
+        catch (error) {}
         if (invoke in COMMANDS) {
             try {
-                COMMANDS[invoke](msg, args);
+                COMMANDS[invoke][0](msg, args);
             } catch (err) {
                 sendEmbed(msg.channel, `Following error occured while executing command:\`\`\`\n${err}\n\`\`\``, "Error", Color.red)      
             }

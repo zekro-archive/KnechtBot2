@@ -38,7 +38,7 @@ Sends all command invokes in a private message.
 exports.help = (msg, args) ->
     cmdlist = ""
     for invoke of main.commands
-        cmdlist += ":white_small_square:  `#{invoke}`\n"
+        cmdlist += ":white_small_square:  **`#{invoke}`**  -  #{main.commands[invoke][1]}\n"
     bot.getDMChannel(msg.author.id)
         .then (chan) ->
             main.sendEmbed chan,
@@ -463,3 +463,48 @@ exports.user = (msg, args) ->
                             }
                         ]
                 bot.createMessage msg.channel.id, emb
+
+
+###
+ID command: '!id <search query>'
+Getting IDs of guild elements by search query.
+###
+exports.getid = (msg, args) ->
+    if args.length < 1
+        main.sendEmbed msg.channel, "`!id <search query>`", "USAGE:", main.color.red
+        return
+    
+    query = ""
+    query += " " + arg for arg in args
+    query = query.substr(1).toLowerCase()
+    guild = msg.member.guild
+    roles = membs = chans = ""
+
+    roles += "#{r.name}  -  `#{r.id}`\n" for r in guild.roles.filter (role) -> role.name.toLowerCase().indexOf(query) > -1
+    chans += "#{c.name}  -  `#{c.id}`\n" for c in guild.channels.filter (chan) -> chan.name.toLowerCase().indexOf(query) > -1
+    membs += "#{m.username}  -  `#{m.id}`\n" for m in guild.members.filter (memb) -> memb.username.toLowerCase().indexOf(query) > -1
+
+    console.log roles, chans, membs
+
+    emb =
+        embed:
+            title: "Results for '#{query}'"
+            fields: [
+                {
+                    name: "Roles"
+                    value: "#{if roles.length == 0 then "Nothing found." else roles}"
+                    inline: false
+                }
+                {
+                    name: "Channels"
+                    value: "#{if chans.length == 0 then "Nothing found." else chans}"
+                    inline: false
+                }
+                {
+                    name: "Members"
+                    value: "#{if membs.length == 0 then "Nothing found." else membs}"
+                    inline: false
+                }
+            ]
+
+    bot.createMessage msg.channel.id, emb
