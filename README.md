@@ -10,6 +10,7 @@
 This is a very powerfull bot administrating my development discord and making the life of my staff team a lot of easier. :^)  
 Below, you will se some functions of this bot:
 
+---
 
 ### UBAAMS™ (Userbot Administration and Managing System)
 With the command `!invite <BotID>`, users can add their own bots on the guild to show others their functions and ask for help.  
@@ -30,3 +31,18 @@ When a member joins the guild, he automatically get's a welcome message by the b
 
 ### User Profiles
 With the command `!user <Mention/ID/name>` you can get a detailed information sheet about the targeted user. Also there will be displayed all userbots, if existent, of this user, his roles and his linked GitHub profile, if existent.
+
+---
+
+## Projects
+
+- **Report System**  
+    - if someone's getting reported, that will be saved in the database
+    - at a special count of reports, the user will be warned (1st report), kicked (2nd report) or banned (3rd report)
+    - userdata and last messages saved in files and db if user quits or is getting kicked / banned from the guild
+    - kicked users will also be saved that they will be recognized after rejoining that they got reported some times
+    - reports / kicks / bans in user profiles (maybe something like VAC ban notification in steam profiles)
+    
+- **Stats System**
+    - Server Stats (onlinem mebs, membs total, supps, message count...) in gspread document
+    - -> [npm Gspread Lib](https://www.npmjs.com/package/google-spreadsheet)
