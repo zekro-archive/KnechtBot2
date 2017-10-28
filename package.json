@@ -25,7 +25,9 @@
     "eris": "^0.7.0",
     "coffee-script": "^1.12.7",
     "after-load": "^1.0.4",
-    "mysql": "^2.15.0"
+    "mysql": "^2.15.0",
+    "google-spreadsheet": "^2.0.4",
+    "colors": "^1.1.2"
   },
   "devDependencies": {}
 }

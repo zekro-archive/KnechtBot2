@@ -1,5 +1,6 @@
 main = require "./main.js"
 mysql = require "mysql"
+gspread = require "google-spreadsheet"
 
 # Getting bot instance from main script
 bot = null

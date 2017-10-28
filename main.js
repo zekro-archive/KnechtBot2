@@ -1,22 +1,31 @@
 require('coffee-script/register');
-const Eris = require('eris')
-const path = require('path')
-const fs = require('fs')
-const mysql = require('mysql')
-const cmds = require("./cmds.coffee")
-const funcs = require("./funcs.coffee")
+const Eris = require('eris');
+const path = require('path');
+const fs = require('fs');
+const mysql = require('mysql');
+const cmds = require("./cmds.coffee");
+const funcs = require("./funcs.coffee");
+const colors = require("colors");
+const aload = require('after-load');
 
 var config = null;
 
+var VERSION = "2.1.C";
+// Extending version with number of commits from github master branch
+VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
+
 // Getting config object from json file if existent
 if (fs.existsSync("config.json")) {
+    info("Loading config...")
     config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 } else {
-    console.log("[ERROR] 'config.json' does not exists! Please download it from github repository!");
+    error("'config.json' does not exists! Please download it from github repository!");
     process.exit(0);
 }
 
 // Initialize Token and Prefix from config
+
+info("Loading preferences...")
 var token = config["token"];
 var PREFIX  = config["prefix"];
 
@@ -35,17 +44,19 @@ const COMMANDS = {
     "profile":  [cmds.user, "*alias for `user`*"],
     "userinfo": [cmds.user, "*alias for `user`*"],
     "id":       [cmds.getid, "get ids of elements by search query"],
+    "report":   [cmds.report, "Report a user or get reports of a user"],
+    "rep":      [cmds.report, "*Alias for `report`*"]
 }
 
-// Permission roles and their level
-const PERMS = {
-    "307084714890625024": 3, // Admin
-    "307084559303049216": 3, // Owner
-    "307084853155725312": 2, // Supporter
-    "353193585727766539": 2, // Moderator
-    "324537251071787009": 1  // Bot Owner
+// Getting role settings (permlvl, prefix) of config.json
+info("Setting up role preferences...")
+const PERMS = {}
+exports.rolepres = {}
+for (var key in config["roles"]) {
+    var role = config["roles"][key];
+    PERMS[role["id"]] = role["permlvl"];
+    exports.rolepres[role["id"]] = role["prefix"];
 }
-
 
 // Just some color codes
 const Color = {
@@ -59,9 +70,8 @@ const Color = {
     orange: 0xe54602
 }
 
-const VERSION = "2.1.3";
-
 // Setting up mysql connectipn properties from config file
+info("Setting up MySql connection...")
 exports.dbcon = mysql.createConnection({
     host: config["mysql"]["host"],
     user: config["mysql"]["user"],
@@ -71,24 +81,19 @@ exports.dbcon = mysql.createConnection({
 
 // Connecting database
 exports.dbcon.connect();
+info("Database connected!")
 
 // Map for invited bots and their owners
 exports.botInvites = {}
 // List of users which get the invite acception message
 exports.inviteReceivers = ["98719514908188672"  /* SkillKiller */, "221905671296253953" /* zekro */]
 
-// Role Prefixes set by giving the role to a user
-exports.rolepres = {
-    "307084714890625024": "⚡", // Admins
-    "307084853155725312": "🌠", // Supporter
-    "353193585727766539": "⚔"   // Moderator
-}
 
 
 console.log(`\nKnechtBot V2 running on version ${VERSION}\n` + 
             `(c) 2017 Ringo Hoffman (zekro Development)` +
-            `All rights reserved.\n\n` + 
-            `Starting up and logging in...`);
+            `All rights reserved.\n\n`); 
+info(`Starting up and logging in...`);
 
 
 // Creating bot instance
@@ -106,8 +111,8 @@ funcs.setBot(bot);
 
 // Ready listener
 bot.on('ready', () => {
-    console.log(`Logged in successfully as account ${bot.user.username}#${bot.user.discriminator}.\n` + 
-                `ID: ${bot.user.id}\n\n`);
+    info(`Logged in successfully as account ${bot.user.username}#${bot.user.discriminator}.`); 
+    info(`ID: ${bot.user.id}\n\n`);
     // Setting the current members and online members as game message
     funcs.setStatsGame(bot.guilds.find(() => { return true; }));
 });
@@ -116,10 +121,10 @@ bot.on('ready', () => {
 bot.on('messageCreate', (msg) => {
     var cont = msg.content;
     if (cont.startsWith(PREFIX) && cont.length > PREFIX.length) {
-        var invoke = cont.split(" ")[0].substr(PREFIX.length);
+        var invoke = cont.split(" ")[0].substr(PREFIX.length).toLowerCase();
         var args = cont.split(" ").slice(1);
         try {
-            console.log(`[CMD] [${msg.member.username} (${msg.member.id})] '${msg.content}'`);
+            console.log(`${"[CMD] ".green} [${msg.member.username} (${msg.member.id})] '${msg.content}'`);
         }
         catch (error) {}
         if (invoke in COMMANDS) {
@@ -204,11 +209,21 @@ function getTime() {
 	h = btf(date.getHours()),
 	min = btf(date.getMinutes()),
     s = btf(date.getSeconds());
-    return `[${d}.${m}.${y} - ${h}:${min}:${s}]`;
+    return `${d}.${m}.${y} - ${h}:${min}:${s}`;
+}
+
+function error(content) {
+    console.log(`[ERROR] ${content}`.red)
+}
+
+function info(content) {
+    console.log(`${"[INFO] ".cyan} ${content}`)
 }
 
 // Export configuration and methods for other scripts
 exports.sendEmbed = sendEmbed;
+exports.info = info;
+exports.error = error;
 exports.getTime = getTime;
 exports.color = Color;
 exports.commands = COMMANDS;
@@ -216,4 +231,4 @@ exports.perms = PERMS;
 exports.version = VERSION;
 
 // Connect bot
-bot.connect().catch(err => console.log(`[ERROR] Logging in failed!\n ${err}`));
+bot.connect().catch(err => error(`Logging in failed!\n ${err}`));
