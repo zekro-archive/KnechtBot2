@@ -37,12 +37,12 @@ With the command `!user <Mention/ID/name>` you can get a detailed information sh
 ## Projects
 
 - **Report System**  
-    - if someone's getting reported, that will be saved in the database
-    - at a special count of reports, the user will be warned (1st report), kicked (2nd report) or banned (3rd report)
-    - userdata and last messages saved in files and db if user quits or is getting kicked / banned from the guild
-    - kicked users will also be saved that they will be recognized after rejoining that they got reported some times
-    - reports / kicks / bans in user profiles (maybe something like VAC ban notification in steam profiles)
+    ✅ if someone's getting reported, that will be saved in the database
+    🔲 at a special count of reports, the user will be warned (1st report), kicked (2nd report) or banned (3rd report)
+    🔲 userdata and last messages saved in files and db if user quits or is getting kicked / banned from the guild
+    🔲 kicked users will also be saved that they will be recognized after rejoining that they got reported some times
+    ✅ reports / kicks / bans in user profiles (maybe something like VAC ban notification in steam profiles)
     
 - **Stats System**
-    - Server Stats (onlinem mebs, membs total, supps, message count...) in gspread document
-    - -> [npm Gspread Lib](https://www.npmjs.com/package/google-spreadsheet)
+    🔲 Server Stats (onlinem mebs, membs total, supps, message count...) in gspread document
+    🔲 -> [npm Gspread Lib](https://www.npmjs.com/package/google-spreadsheet)
