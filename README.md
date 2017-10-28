@@ -1,4 +1,5 @@
 <div align="center">
+    <img src="http://zekro.de/dl/knechtv2-avatar.png" width="250"/>
     <h1> ~ KnechtBot V2 ~ </h1>
     <strong>Server management system of zekro's Dev Discord<br>Complete reworked version of <a href="https://github.com/zekroTJA/regiusBot">KnechtBot</a> in NodeJS.</strong>
 </div>
