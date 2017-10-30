@@ -56,6 +56,6 @@
         "xpinterval": 0,
         "xpmsgmultiplier": 0,
         "lvldiff": 0.2,
-	"reports": [10000, 50000, 100000]
+	"reports": [10000, 5]
     }
 }
