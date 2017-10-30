@@ -33,17 +33,9 @@ When a member joins the guild, he automatically get's a welcome message by the b
 ### User Profiles
 With the command `!user <Mention/ID/name>` you can get a detailed information sheet about the targeted user. Also there will be displayed all userbots, if existent, of this user, his roles and his linked GitHub profile, if existent.
 
----
+### Report System
+With the `!report` command, the staff team has the ability to report members for rule-violating behaviour. All reports will be saved in the database, with timestamp, report creator and reson, and will also stay saved if the user quits the server, so of he rejoins it, we always know he got reportet and for what. You can also list all reports of a user. Also number of reports will be displayed in the user profile.
 
-## Projects
-
-- **Report System**  
-    ✅ if someone's getting reported, that will be saved in the database  
-    🔲 at a special count of reports, the user will be warned (1st report), kicked (2nd report) or banned (3rd report)  
-    🔲 userdata and last messages saved in files and db if user quits or is getting kicked / banned from the guild  
-    🔲 kicked users will also be saved that they will be recognized after rejoining that they got reported some times  
-    ✅ reports / kicks / bans in user profiles (maybe something like VAC ban notification in steam profiles)  
-    
-- **Stats System**  
-    🔲 Server Stats (onlinem mebs, membs total, supps, message count...) in gspread document  
-    🔲 -> [npm Gspread Lib](https://www.npmjs.com/package/google-spreadsheet)  
+### XP system
+Yes, the new Knecht is now also having a little experience system, but now way better than the old one.  
+I don't want to talk much about how you'll get XP and how much, because you can look for in the code, if you want. But the specific numbers are set in the `config.json` and will not be published.
