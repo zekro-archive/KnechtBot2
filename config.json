@@ -52,10 +52,10 @@
 
     "exp": 
     {
-        "interval": 10,
+        "interval": 0,
         "xpinterval": 0,
         "xpmsgmultiplier": 0,
-        "lvldiff": 0.2,
-	"reports": [10000, 5]
+        "lvldiff": 0,
+        "reports": [0, 0]
     }
 }
