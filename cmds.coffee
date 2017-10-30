@@ -17,6 +17,42 @@ exports.setBot = (b) -> bot = b
 
 # Just a test command for development purposes
 exports.test = (msg, args) ->
+    guild = bot.guilds.find (g) -> true
+    membs = guild.members
+    admins = sups = mods = ""
+    owner = membs.find (m) -> m.id == guild.ownerID
+
+    membs.filter((m) -> m.roles.filter((r) -> r == "307084714890625024").length > 0).forEach (m) -> admins += m.mention + "\n"
+    membs.filter((m) -> m.roles.filter((r) -> r == "307084853155725312").length > 0).forEach (m) -> sups += m.mention + "\n"
+    membs.filter((m) -> m.roles.filter((r) -> r == "353193585727766539").length > 0).forEach (m) -> mods += m.mention + "\n"
+
+    emb =
+        embed:
+            description: ":diamond_shape_with_a_dot_inside:  **STAFF TEAM**\n\n*The responsible dudes for shit is going on on this guild. :^) <3*"
+            color: main.color.gold
+            fields: [
+                {
+                    name: "⭐   Owner"
+                    value: owner.mention
+                    inline: false
+                }
+                {
+                    name: "⚡   Admins"
+                    value: admins
+                    inline: false
+                }
+                {
+                    name: "🌠   Supporters"
+                    value: sups
+                    inline: false
+                }
+                {
+                    name: "⚔   Moderators"
+                    value: mods
+                    inline: false
+                }
+            ]
+    bot.createMessage msg.channel.id, emb
     # funcs.xpchange msg.member, -8
     # RETURN ROLENAMES IN CONSOLE
     # console.log bot.guilds.find(-> return true).roles.map (m) -> return "#{m.name} - #{m.id}"
@@ -629,11 +665,53 @@ exports.xp = (msg, args) ->
     else
         toplist = ""
         main.dbcon.query 'SELECT * FROM `xp` ORDER BY `xp`.`xp` DESC', (err, res) ->
-            console.log res
             if !err and res.length > 0
                 ind = 0
+                numbs = names = xps = ""
+                btf = (inpt, should) -> 
+                    while should > "#{inpt}".length
+                        inpt = "0" + inpt
+                    return inpt
+                maxxplen = "#{res[0].xp}".length
                 for row in res
                     if ind < 20
                         user = msg.member.guild.members.find (m) -> m.id == row.uid
-                        toplist += "**#{++ind}**  -  #{if typeof user == "undefined" then "Not on server" else user.username}  -  `LVL #{funcs.xpgetlvl(row.xp)[0]} (#{row.xp} XP)`\n"
-                bot.createMessage msg.channel.id, "**GUILD XP TOP 20 LIST**\n\n" + toplist
+                        if !user.bot
+                            toplist += "**#{btf(++ind, 2)}**  -  `LVL #{btf(funcs.xpgetlvl(row.xp)[0], 2)} (#{btf(row.xp, maxxplen)} XP)`  -  #{if typeof user == "undefined" then "Not on server" else user.username}\n"
+                emb =
+                    embed:
+                        title: "GUILD XP TOP 20 LIST"
+                        color: main.color.gold
+                        description: toplist
+                bot.createMessage msg.channel.id, emb
+
+
+###
+Command Log command: '!cmdlog (<@mention/ID/name>)'
+Displays last send commands of the bot with username, command + arguments,
+timestamp and channel name.
+###
+exports.cmdlog = (msg, args) ->
+    user = null
+    if args.length > 0
+        if msg.mentions.length > 0
+            user = msg.member.guild.members.find (m) -> m.id == msg.mentions[0].id
+        else
+            user = msg.member.guild.members.find (m) -> m.id == args[0]
+            if typeof user == "undefined"
+                user = msg.member.guild.members.find (m) -> m.username.toLowerCase().indexOf(args[0].toLowerCase()) > -1
+                if typeof user == "undefined"
+                    main.sendEmbed msg.channel, "User `#{args[0]}` could not be found!", "Error", main.color.red
+                    return
+    outtext = temptext = "**CMD LIST**\n\n"
+    main.dbcon.query 'SELECT * FROM cmdlog', (err, res) ->
+        if !err and res.length > 0
+            for row in res
+                if typeof user == "undefined" or user.id == row.uid
+                    temptext += "#{row.uname} - `#{row.content}` in #{row.channame} @ #{row.timestamp}\n"
+                    if temptext.length > 2000
+                        bot.createMessage msg.channel.id, outtext
+                        return
+                    else
+                        outtext = temptext
+            bot.createMessage msg.channel.id, if outtext == "**CMD LIST**\n\n" then "<no commands executed>" else outtext

@@ -185,3 +185,61 @@ exports.xpgetlvl = (xpval) ->
     nextlvln =  parseInt(getreq(lvl+1))
     nextlvlp =  parseInt((nextlvl / nextlvln) * 100)
     return [lvl, nextlvl, nextlvln, nextlvlp]
+
+
+###
+Just a simple logging function for commands in DB.
+###
+exports.log = (msg) ->
+    memb = msg.member
+    chan = msg.channel
+    cont = msg.content
+    main.dbcon.query 'INSERT INTO cmdlog (uid, uname, cmd, content, timestamp, chanid, channame) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+        [
+            memb.id
+            "#{memb.username}##{memb.discriminator}"
+            cont.split(" ")[0]
+            cont,
+            main.getTime(),
+            chan.id,
+            chan.name
+        ]
+
+
+exports.welcomeStaff = ->
+    guild = bot.guilds.find (g) -> true
+    membs = guild.members
+    admins = sups = mods = ""
+    owner = membs.find (m) -> m.id == guild.ownerID
+
+    membs.filter((m) -> m.roles.filter((r) -> r == "307084714890625024").length > 0).forEach (m) -> admins += m.mention + "\n"
+    membs.filter((m) -> m.roles.filter((r) -> r == "307084853155725312").length > 0).forEach (m) -> sups += m.mention + "\n"
+    membs.filter((m) -> m.roles.filter((r) -> r == "353193585727766539").length > 0).forEach (m) -> mods += m.mention + "\n"
+
+    emb =
+        embed:
+            description: ":diamond_shape_with_a_dot_inside:  **STAFF TEAM**\n\n*The responsible dudes for shit is going on on this guild. :^) <3*"
+            color: main.color.gold
+            fields: [
+                {
+                    name: "Owner"
+                    value: owner.mention
+                    inline: false
+                }
+                {
+                    name: "Admins"
+                    value: admins
+                    inline: false
+                }
+                {
+                    name: "Supporters"
+                    value: sups
+                    inline: false
+                }
+                {
+                    name: "Moderators"
+                    value: mods
+                    inline: false
+                }
+            ]
+    bot.editMessage "307085753744228356", "374574875572043776", emb
