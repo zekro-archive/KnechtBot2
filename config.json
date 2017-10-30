@@ -44,8 +44,17 @@
         }
     ],
 
-    "invitereceivers": [
-        "98719514908188672",
-        "221905671296253953"
-    ]
+    "invitereceivers": 
+    [
+	    "98719514908188672", 
+	    "221905671296253953"
+    ],
+
+    "exp": 
+    {
+        "interval": 10,
+        "xpinterval": 0,
+        "xpmsgmultiplier": 0,
+        "lvldiff": 0.2
+    }
 }
