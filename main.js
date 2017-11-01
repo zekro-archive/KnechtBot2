@@ -45,7 +45,8 @@ const COMMANDS = {
     "report":   [cmds.report, "report a user or get reports of a user"],
     "rep":      [cmds.report, "*Alias for `report`*"],
     "xp":       [cmds.xp, "see xp toplist or xp of specific user"],
-    "cmdlog":   [cmds.cmdlog, "get list of last executed commands"]
+    "cmdlog":   [cmds.cmdlog, "get list of last executed commands"],
+    "whois":    [cmds.whois, "get a member/bot by ID"]
 }
 
 // Getting role settings (permlvl, prefix) of config.json

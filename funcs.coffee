@@ -104,7 +104,7 @@ exports.addbot = (ubot, owner) ->
                                    Your bot got accepted!
 
                                    Please now, register your bot's prefix with the `!prefix` command!
-                                   **Bot's without an registered prefix will be kicked after one day!**
+                                   **Bot's without an registered prefix will be kicked after 24 hours!**
                                    """, "BOT INVTE ACCEPTED", main.color.green
 
 

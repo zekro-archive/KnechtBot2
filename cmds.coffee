@@ -17,42 +17,6 @@ exports.setBot = (b) -> bot = b
 
 # Just a test command for development purposes
 exports.test = (msg, args) ->
-    guild = bot.guilds.find (g) -> true
-    membs = guild.members
-    admins = sups = mods = ""
-    owner = membs.find (m) -> m.id == guild.ownerID
-
-    membs.filter((m) -> m.roles.filter((r) -> r == "307084714890625024").length > 0).forEach (m) -> admins += m.mention + "\n"
-    membs.filter((m) -> m.roles.filter((r) -> r == "307084853155725312").length > 0).forEach (m) -> sups += m.mention + "\n"
-    membs.filter((m) -> m.roles.filter((r) -> r == "353193585727766539").length > 0).forEach (m) -> mods += m.mention + "\n"
-
-    emb =
-        embed:
-            description: ":diamond_shape_with_a_dot_inside:  **STAFF TEAM**\n\n*The responsible dudes for shit is going on on this guild. :^) <3*"
-            color: main.color.gold
-            fields: [
-                {
-                    name: "⭐   Owner"
-                    value: owner.mention
-                    inline: false
-                }
-                {
-                    name: "⚡   Admins"
-                    value: admins
-                    inline: false
-                }
-                {
-                    name: "🌠   Supporters"
-                    value: sups
-                    inline: false
-                }
-                {
-                    name: "⚔   Moderators"
-                    value: mods
-                    inline: false
-                }
-            ]
-    bot.createMessage msg.channel.id, emb
     # funcs.xpchange msg.member, -8
     # RETURN ROLENAMES IN CONSOLE
     # console.log bot.guilds.find(-> return true).roles.map (m) -> return "#{m.name} - #{m.id}"
@@ -238,19 +202,28 @@ exports.prefix = (msg, args) ->
                     main.sendEmbed chan, "Prefix successfully set to `#{prefix}`!", "Error", main.color.green
 
     list = ->
-        out = ""
-        unset = ""
+        out = unset = whitelisted = ""
         main.dbcon.query 'SELECT * FROM userbots', (err, res) ->
             if !err and row != null
+                maxlen = 0
+                for row in res
+                    maxlen = if row.prefix.length > maxlen then row.prefix.length else maxlen
+                btf = (inpt) ->
+                    out = inpt
+                    while out.length < maxlen
+                        out += " "
+                    return out
                 for row in res
                     ubot = sender.guild.members.find (m) -> m.id == "#{row.botid}"
-                    uowner = sender.guild.members.find (m) -> m.id == "#{row.ownerid}"
+                    uowner = sender.guild.members.find (m) -> m.id == "#{row.ownerid}"            
                     if typeof ubot != "undefined" and typeof uowner != "undefined"
-                        if row.prefix == "UNSET"
+                        if row.prefix == "UNSET" and row.whitelisted == 0
                             unset += "#{ubot.username} *(#{uowner.username})*\n"
-                        else
-                            out += "#{ubot.username} *(#{uowner.username})*  -  `#{row.prefix}`\n"
-                bot.createMessage chan.id, "**REGISTERED PREFIXES**\n\n#{out}\n\n\n**BOTS WITH UNSET PREFIX**\n\n#{unset}"
+                        else if row.whitelisted == 0
+                            out += "#{btf row.prefix}  -  #{ubot.username} (#{uowner.username})\n"
+                        else if row.whitelisted == 1
+                            whitelisted += "#{ubot.username} *(#{uowner.username})*\n"
+                bot.createMessage chan.id, "**REGISTERED PREFIXES**\n\n```\n#{out}\n```\n\n\n**BOTS WITH UNSET PREFIX**\n\n#{unset}\n\n**WHITELISTED BOTS WITHOUT PREFIX**\n\n#{whitelisted}"
 
 
     if args.length < 2
@@ -581,30 +554,27 @@ exports.report = (msg, args) ->
     victim = null
     reason = ""
 
-    if !funcs.checkPerm msg.member, 2
-        return
-
     if args.length < 2
         main.sendEmbed chan, """
                              `!rep <@mention/ID> <reason>`  -  Report a member
                              `!rep info <@mention/ID>`  -  Get all reports of a member
                              """, "USAGE:", main.color.red
         return
-    
-    if msg.mentions.length > 0
-        victim = sender.guild.members.find (m) -> m.id == msg.mentions[0].id
-    else    
-        victim = sender.guild.members.find (m) -> m.id == args[0]
-
-    if typeof victim == "undefined"
-        main.sendEmbed chan, "Please enter a valid member!", "USAGE:", main.color.red
-        return
 
     if args[0] == "info"
+        if msg.mentions.length > 0
+            victim = sender.guild.members.find (m) -> m.id == msg.mentions[0].id
+        else    
+            victim = sender.guild.members.find (m) -> m.id == args[1]
+
+        if typeof victim == "undefined"
+            main.sendEmbed chan, "Please enter a valid member!", "USAGE:", main.color.red
+            return
+
         main.dbcon.query 'SELECT * FROM reports WHERE victim = ?', [victim.id], (err, res) ->
             if !err
                 if res.length == 0
-                    main.sendEmbed chan, "User #{victim.id} has a white west! :thumbsup:", "Reports", main.color.green
+                    main.sendEmbed chan, "User #{victim.mention} has a white west! :thumbsup:", "Reports", main.color.green
                 else
                     reps = ""
                     for row in res
@@ -617,6 +587,18 @@ exports.report = (msg, args) ->
                                          #{reps}
                                          """, "Reports", main.color.orange
     else
+        if !funcs.checkPerm msg.member, 2
+            return
+
+        if msg.mentions.length > 0
+            victim = sender.guild.members.find (m) -> m.id == msg.mentions[0].id
+        else    
+            victim = sender.guild.members.find (m) -> m.id == args[0]
+
+        if typeof victim == "undefined"
+            main.sendEmbed chan, "Please enter a valid member!", "USAGE:", main.color.red
+            return
+
         reason += " " + arg for arg in args[1..]
         main.dbcon.query 'INSERT INTO reports (victim, reporter, date, reason) VALUES (?, ?, ?, ?)', [victim.id, sender.id, main.getTime(), reason.substr 1], (err, res) ->
             if !err
@@ -624,13 +606,18 @@ exports.report = (msg, args) ->
                     main.sendEmbed chan, "Reported #{victim.mention} by #{sender.mention} for reason ```\n#{reason}\n```\nUser got reported **#{res.length} times** now.", "Report", main.color.orange
                     kerbholz = bot.getChannel "342627519825969172"
                     main.sendEmbed kerbholz, "Reported #{victim.mention} by #{sender.mention} for reason ```\n#{reason}\n```\nUser got reported **#{res.length} times** now.", "Report", main.color.orange
-                    main.dbcon.query 'SELECT * FROM xp WHERE uid = ?', [victim.id], (err, res) ->
-                        xpamm = -(main.config["XP"]["reports"][0] * (res.length - 1) * main.config["XP"]["reports"][1])
-                        if !err and res.length == 0
-                            main.dbcon.query 'INSERT INTO xp (uid, xp) VALUES (?, ?)', [victim.id, xpamm]
-                        else if !err
-                            main.dbcon.query 'UPDATE xp SET xp = xp + ? WHERE uid = ?', [xpamm, victim.id]
-        
+                    if res.length == 2
+                        bot.getDMChannel(victim.id)
+                            .then (chan) -> main.sendEmbed chan, """
+                                                                 :warning:   **WARNING**
+
+                                                                 You got reported **2 times** now on this guild by a staff member.
+                                                                 If you will show any rule-violating behaviour again, **you will be kicked or banned!**
+
+                                                                 Remember: Reports will **never** expire and will be always visible in your profile, also
+                                                                 all reports of you can be displayed every user with the `!report info` command.
+                                                                 Reports will not disappear if you quit and rejoin the guild!
+                                                                 """, null, main.color.red
 
 ###
 XP command: '!xp'
@@ -715,3 +702,20 @@ exports.cmdlog = (msg, args) ->
                     else
                         outtext = temptext
             bot.createMessage msg.channel.id, if outtext == "**CMD LIST**\n\n" then "<no commands executed>" else outtext
+
+
+###
+WhoIs command: '!whois <ID>'
+Getting the member/bot from an ID.
+###
+exports.whois = (msg, args) ->
+    if args.length > 0
+        user = msg.member.guild.members.find (m) -> m.id == args[0]
+        if typeof user == "undefined"
+            main.sendEmbed msg.channel, "No member found with the ID `#{args[0]}`.", null, main.color.red
+        else
+            main.sendEmbed msg.channel, """
+                                        Found #{if user.bot then "bot" else "member"} #{user.mention} (#{user.username}#{user.discriminator})
+                                        """, null, main.color.gold
+    else
+        main.sendEmbed msg.channel, "`!whois <ID>`", "USAGE:", main.color.red
