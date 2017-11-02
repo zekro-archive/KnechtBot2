@@ -7,7 +7,6 @@ const cmds = require("./cmds.coffee");
 const funcs = require("./funcs.coffee");
 const colors = require("colors");
 const aload = require('after-load');
-
 var config = null;
 
 var VERSION = "2.1.C";
@@ -17,14 +16,13 @@ VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li
 // Getting config object from json file if existent
 if (fs.existsSync("config.json")) {
     info("Loading config...")
-    config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    config = JSON.parse(fs.readFileSync('config.json', 'utf8').substring(1));
 } else {
     error("'config.json' does not exists! Please download it from github repository!");
     process.exit(0);
 }
 
 // Initialize Token and Prefix from config
-
 info("Loading preferences...")
 var token = config["token"];
 var PREFIX  = config["prefix"];
@@ -44,8 +42,11 @@ const COMMANDS = {
     "profile":  [cmds.user, "*alias for `user`*"],
     "userinfo": [cmds.user, "*alias for `user`*"],
     "id":       [cmds.getid, "get ids of elements by search query"],
-    "report":   [cmds.report, "Report a user or get reports of a user"],
-    "rep":      [cmds.report, "*Alias for `report`*"]
+    "report":   [cmds.report, "report a user or get reports of a user"],
+    "rep":      [cmds.report, "*Alias for `report`*"],
+    "xp":       [cmds.xp, "see xp toplist or xp of specific user"],
+    "cmdlog":   [cmds.cmdlog, "get list of last executed commands"],
+    "whois":    [cmds.whois, "get a member/bot by ID"]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -89,7 +90,6 @@ exports.botInvites = {}
 exports.inviteReceivers = ["98719514908188672"  /* SkillKiller */, "221905671296253953" /* zekro */]
 
 
-
 console.log(`\nKnechtBot V2 running on version ${VERSION}\n` + 
             `(c) 2017 Ringo Hoffman (zekro Development)` +
             `All rights reserved.\n\n`); 
@@ -117,9 +117,21 @@ bot.on('ready', () => {
     funcs.setStatsGame(bot.guilds.find(() => { return true; }));
 });
 
-// Command listener
+// Message listener
 bot.on('messageCreate', (msg) => {
     var cont = msg.content;
+
+    // Adding ammount of XP from message length to message sender
+    try {
+        if (msg.channel.type == 0) {
+            // Thats a little mathematical function to control xp gain in relation to message lenght
+            xmammount = parseInt(Math.log((cont.length / config["exp"]["flatter"]) + config["exp"]["cap"]) * config["exp"]["xpmsgmultiplier"]);
+            if (xmammount > 0)
+                funcs.xpchange(msg.member, xmammount);
+        }
+    } catch (e) { error("Faild adding xp to member on message:\n" + e); }
+    
+    // Command parser
     if (cont.startsWith(PREFIX) && cont.length > PREFIX.length) {
         var invoke = cont.split(" ")[0].substr(PREFIX.length).toLowerCase();
         var args = cont.split(" ").slice(1);
@@ -130,6 +142,7 @@ bot.on('messageCreate', (msg) => {
         if (invoke in COMMANDS) {
             try {
                 COMMANDS[invoke][0](msg, args);
+                funcs.log(msg);
             } catch (err) {
                 sendEmbed(msg.channel, `Following error occured while executing command:\`\`\`\n${err}\n\`\`\``, "Error", Color.red)      
             }
@@ -146,7 +159,6 @@ bot.on('guildMemberAdd', (guild, member) => {
     // Handling if joined member is a userbot
     if (member.bot && member.id in exports.botInvites) {
         var owner = exports.botInvites[member.id];
-        console.log(exports.botInvites[member.id]);
         funcs.addbot(member, owner);
     }
 });
@@ -156,9 +168,7 @@ bot.on('guildMemberRemove', (guild, member) => {
     // Refreshing members stats game message
     funcs.setStatsGame(guild);
     // Handling if left user was a userbot
-    if (member.bot) {
-        funcs.removebot(member);
-    }
+    funcs.removebot(member);
 })
 
 // Member update event
@@ -167,6 +177,8 @@ bot.on('guildMemberUpdate', (guild, member, oldMember) => {
     funcs.setStatsGame(guild);
     // Checking and changing role prefixes
     funcs.rolepres(member, oldMember);
+    // Welcome staff message update
+    funcs.welcomeStaff();
 })
 
 
@@ -212,10 +224,20 @@ function getTime() {
     return `${d}.${m}.${y} - ${h}:${min}:${s}`;
 }
 
+/**
+ * Short function for sending a colored
+ * error message in console.
+ * @param {*String} content 
+ */
 function error(content) {
     console.log(`[ERROR] ${content}`.red)
 }
 
+/**
+ * Short function for sending a colored
+ * information message in console.
+ * @param {*String} content 
+ */
 function info(content) {
     console.log(`${"[INFO] ".cyan} ${content}`)
 }
@@ -229,6 +251,18 @@ exports.color = Color;
 exports.commands = COMMANDS;
 exports.perms = PERMS;
 exports.version = VERSION;
+exports.config = config;
+
+/*
+    +--------------------+
+    | F U N C  L O O P S |
+    +--------------------+
+*/
+try {
+    setInterval(funcs.xptimer, config["exp"]["interval"] * 60 * 1000);
+    info("Startet xp loop")
+} catch (e) { error("Failed staring xp loop") }
+
 
 // Connect bot
 bot.connect().catch(err => error(`Logging in failed!\n ${err}`));

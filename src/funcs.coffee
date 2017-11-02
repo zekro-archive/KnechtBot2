@@ -104,26 +104,65 @@ exports.addbot = (ubot, owner) ->
                                    Your bot got accepted!
 
                                    Please now, register your bot's prefix with the `!prefix` command!
-                                   **Bot's without an registered prefix will be kicked after one day!**
+                                   **Bot's without an registered prefix will be kicked after 24 hours!**
                                    """, "BOT INVTE ACCEPTED", main.color.green
+            setTimeout checkprefix, 22 * 3600 * 1000, ubot, false
+            setTimeout checkprefix, 24 * 3600 * 1000, ubot, true
+
+###
+Just a little function for Timeout in 'exports.addbot' to send warning message
+or kick a userbot if the prefix of the bot is not set in DB.
+###
+checkprefix = (ubot, kick) ->
+    main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
+        if !err
+            if res.length > 0
+                console.log res[0].prefix, res[0].whitelisted
+                if res[0].prefix == "UNSET" and res[0].whitelisted == 0
+                    console.log ("prefix unset")
+                    if kick
+                        bot.kickGuildMember ubot.guild.id, ubot.id, "Bot prefix not registered"
+                    else
+                        bot.getDMChannel res[0].ownerid
+                            .then (chan) -> main.sendEmbed chan, """
+                                                                 Your bot's prefix is still unregistered!
+                                                                 Please register a prefix as soon as possible with the `!prefix` command!
+                                                                 Otherwise, **the bot will be kicked automatically from the guild in the next 2 hours!**
+                                                                 """, "ATTENTION", main.color.red
 
 
 ###
 If a bor gets kicked, this will remove its entry from mySQL databse
 and will remove bot owner role from the user who was invited the bot.
+If the kicked one is a member, which is also a bot owner on the guild,
+all his bots will be unregistered and kicked from the guild.
 ###
 exports.removebot = (ubot) ->
-    main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
-        if typeof res == "undefined"
-            console.log "BOT NOT REGISTERED"
-            return
-    main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
-        if !err and res != null
-            ownerid = res[0].ownerid
-            console.log "OWNER ID: #{ownerid}"
-            main.dbcon.query 'DELETE FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
-                if !err
-                    bot.removeGuildMemberRole ubot.guild.id, ownerid, "324537251071787009"
+    if ubot.bot
+        main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
+            if typeof res == "undefined"
+                console.log "BOT NOT REGISTERED"
+                return
+            else if res.length == 0
+                return
+        main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
+            if !err and res != null
+                ownerid = res[0].ownerid
+                console.log "OWNER ID: #{ownerid}"
+                main.dbcon.query 'DELETE FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
+                    if !err
+                        bot.removeGuildMemberRole ubot.guild.id, ownerid, "324537251071787009"
+    else
+        main.dbcon.query 'SELECT * FROM userbots WHERE ownerid = ?', [ubot.id], (err, res) ->
+            if typeof res == "undefined"
+                return
+            else if res.length == 0
+                return
+            else
+                for row in res
+                    bot.kickGuildMember ubot.guild.id, row.botid, "Bot owner left guild"
+                main.dbcon.query 'DELETE FROM userbots WHERE ownerid = ?', [ubot.id]
+
 
 
 ###
@@ -146,3 +185,108 @@ exports.rolepres = (after, before) ->
                         try after.edit {nick: "#{after.nick.substring 2, after.nick.length}"}
                         catch e then console.log e
                         bot.removeGuildMemberRole after.guild.id, after.id, "373081803487182849"
+
+
+###
+Changes xp in database for specific member.
+Ammount can be positive as also negative.
+###
+exports.xpchange = (member, ammount) ->
+    main.dbcon.query 'SELECT * FROM xp WHERE uid = ?', [member.id], (err, res) ->
+        if !err and res.length == 0
+            main.dbcon.query 'INSERT INTO xp (uid, xp) VALUES (?, ?)', [member.id, ammount]
+        else if !err
+            main.dbcon.query 'UPDATE xp SET xp = xp + ? WHERE uid = ?', [ammount, member.id]
+
+
+###
+Function for xp timer, which increases the xp value of
+all online users of an ammount read out of config file
+###
+exports.xptimer = (val) ->
+    guild = bot.guilds.find (g) -> true
+    guild.members.filter (m) -> m.status != "offline"
+        .forEach (m) ->
+            exports.xpchange m, main.config["exp"]["xpinterval"]
+
+
+###
+Function to get current lvl, xp to next lvl
+and progress from current total xp value.
+###
+exports.xpgetlvl = (xpval) ->
+    getreq = (x) -> if x == 0 then 0 else 10000 * 1.2 ** (x-1)
+    lvl = 0
+    while xpval > getreq(lvl)
+        lvl++
+    lvl = lvl-1
+    nextlvl =   parseInt(xpval - getreq(lvl))
+    nextlvln =  parseInt(getreq(lvl+1))
+    nextlvlp =  parseInt((nextlvl / nextlvln) * 100)
+    return [lvl, nextlvl, nextlvln, nextlvlp]
+
+
+###
+Just a simple logging function for commands in DB.
+###
+exports.log = (msg) ->
+    memb = msg.member
+    chan = msg.channel
+    cont = msg.content
+    main.dbcon.query 'INSERT INTO cmdlog (uid, uname, cmd, content, timestamp, chanid, channame) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+        [
+            memb.id
+            "#{memb.username}##{memb.discriminator}"
+            cont.split(" ")[0]
+            cont,
+            main.getTime(),
+            chan.id,
+            chan.name
+        ]
+
+
+###
+Edits a message in 'welcome' channel on my dev discord
+to show there live all staff members, so this list
+will be refreshed automatically if there is a new
+staff member or if someone left staff.
+###
+exports.welcomeStaff = ->
+    guild = bot.guilds.find (g) -> true
+    membs = guild.members
+    admins = sups = mods = ""
+    owner = membs.find (m) -> m.id == guild.ownerID
+
+    membs.filter((m) -> m.roles.filter((r) -> r == "307084714890625024").length > 0).forEach (m) -> admins += m.mention + "\n"
+    membs.filter((m) -> m.roles.filter((r) -> r == "307084853155725312").length > 0).forEach (m) -> sups += m.mention + "\n"
+    membs.filter((m) -> m.roles.filter((r) -> r == "353193585727766539").length > 0).forEach (m) -> mods += m.mention + "\n"
+
+    emb =
+        embed:
+            description: ":diamond_shape_with_a_dot_inside:  **STAFF TEAM**\n\n*The responsible dudes for shit is going on on this guild. :^) <3*"
+            color: main.color.gold
+            fields: [
+                {
+                    name: "Owner"
+                    value: owner.mention
+                    inline: false
+                }
+                {
+                    name: "Admins"
+                    value: admins
+                    inline: false
+                }
+                {
+                    name: "Supporters"
+                    value: sups
+                    inline: false
+                }
+                {
+                    name: "Moderators"
+                    value: mods
+                    inline: false
+                }
+            ]
+    bot.editMessage "307085753744228356", "374574875572043776", emb
+
+

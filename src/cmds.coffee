@@ -17,8 +17,10 @@ exports.setBot = (b) -> bot = b
 
 # Just a test command for development purposes
 exports.test = (msg, args) ->
-    RETURN ROLENAMES IN CONSOLE
-    console.log bot.guilds.find(-> return true).roles.map (m) -> return "#{m.name} - #{m.id}"
+    console.log msg.channel.type
+    # funcs.xpchange msg.member, -8
+    # RETURN ROLENAMES IN CONSOLE
+    # console.log bot.guilds.find(-> return true).roles.map (m) -> return "#{m.name} - #{m.id}"
 
     # COLOR DEV ROLES LIKE GITHUB COLORS
     # clrs = JSON.parse require("fs").readFileSync('colors.json', 'utf8')
@@ -156,7 +158,6 @@ exports.invite = (msg, args) ->
     if args.length > 0
         bid = args[0]
         main.botInvites[args[0]] = msg.member
-        console.log main.botInvites
         for u in main.inviteReceivers
             bot.getDMChannel(u)
                 .then (chan) ->
@@ -190,8 +191,6 @@ exports.prefix = (msg, args) ->
                 return
             main.dbcon.query 'SELECT * FROM userbots WHERE prefix = ?', [prefix], (err, res) ->
                 if err or res.length > 0
-                    console.log res
-                    console.log prefix
                     main.sendEmbed chan, "The preifix `#{prefix}` is still used!", "Error", main.color.red
                     return
                 main.dbcon.query 'UPDATE userbots SET prefix = ? WHERE botid = ?', [prefix, botid], (err, res) ->
@@ -201,19 +200,28 @@ exports.prefix = (msg, args) ->
                     main.sendEmbed chan, "Prefix successfully set to `#{prefix}`!", "Error", main.color.green
 
     list = ->
-        out = ""
-        unset = ""
+        out = unset = whitelisted = ""
         main.dbcon.query 'SELECT * FROM userbots', (err, res) ->
             if !err and row != null
+                maxlen = 0
+                for row in res
+                    maxlen = if row.prefix.length > maxlen then row.prefix.length else maxlen
+                btf = (inpt) ->
+                    out = inpt
+                    while out.length < maxlen
+                        out += " "
+                    return out
                 for row in res
                     ubot = sender.guild.members.find (m) -> m.id == "#{row.botid}"
-                    uowner = sender.guild.members.find (m) -> m.id == "#{row.ownerid}"
+                    uowner = sender.guild.members.find (m) -> m.id == "#{row.ownerid}"            
                     if typeof ubot != "undefined" and typeof uowner != "undefined"
-                        if row.prefix == "UNSET"
+                        if row.prefix == "UNSET" and row.whitelisted == 0
                             unset += "#{ubot.username} *(#{uowner.username})*\n"
-                        else
-                            out += "#{ubot.username} *(#{uowner.username})*  -  `#{row.prefix}`\n"
-                bot.createMessage chan.id, "**REGISTERED PREFIXES**\n\n#{out}\n\n\n**BOTS WITH UNSET PREFIX**\n\n#{unset}"
+                        else if row.whitelisted == 0
+                            out += "#{btf row.prefix}  -  #{ubot.username} (#{uowner.username})\n"
+                        else if row.whitelisted == 1
+                            whitelisted += "#{ubot.username} *(#{uowner.username})*\n"
+                bot.createMessage chan.id, "**REGISTERED PREFIXES**\n\n```\n#{out}\n```\n\n\n**BOTS WITH UNSET PREFIX**\n\n#{unset}\n\n**WHITELISTED BOTS WITHOUT PREFIX**\n\n#{whitelisted}"
 
 
     if args.length < 2
@@ -320,7 +328,6 @@ exports.github = (msg, args) ->
 
     list = ->
         main.dbcon.query 'SELECT * FROM github', (err, res) ->
-            console.log res
             if !err and res.length > 0
                 out = ""
                 for row in res
@@ -409,65 +416,81 @@ exports.user = (msg, args) ->
                 main.dbcon.query 'SELECT * FROM reports WHERE victim = ?', [user.id], (err, res) ->
                     reports = res.length
 
-                    emb =
-                        embed:
-                            title: "#{user.username} - User Profile"
-                            thumbnail:
-                                url: user.avatarURL
-                            color: getColor user
-                            fields: [
-                                {
-                                    name: "Username"
-                                    value: "#{user.username}##{user.discriminator}"
-                                    inline: false
-                                }
-                                {
-                                    name: "Nickname"
-                                    value: if typeof user.nick == "undefined" then "No nick set" else user.nick
-                                    inline: false
-                                }
-                                {
-                                    name: "ID"
-                                    value: user.id
-                                    inline: false
-                                }
-                                {
-                                    name: "Current Game"
-                                    value: "#{if user.game == null then 'No game played' else user.game.name}"
-                                    inline: false
-                                }
-                                {
-                                    name: "Current Status"
-                                    value: user.status
-                                    inline: false
-                                }
-                                {
-                                    name: "Joined Guild at"
-                                    value: user.joinedAt
-                                    inline: false
-                                }
-                                {
-                                    name: "Roles on this Guild"
-                                    value: getRoles()
-                                    inline: false
-                                }
-                                {
-                                    name: "GitHub"
-                                    value: "**#{github}**"
-                                    inline: false
-                                }
-                                {
-                                    name: "Reports"
-                                    value: "#{if reports == 0 then "This user has a white west!" else "**#{reports} reports** in past."}"
-                                    inline: false
-                                }
-                                {
-                                    name: "User Bots"
-                                    value: botout
-                                    inline: false
-                                }
-                            ]
-                    bot.createMessage msg.channel.id, emb
+                    main.dbcon.query 'SELECT * FROM xp WHERE uid = ?', [user.id], (err, res) ->
+                        if err or res.length == 0
+                            xpval = 0
+                        else if !err
+                            xpval = res[0].xp
+                        xpvals = funcs.xpgetlvl(xpval)
+                        xpd = """
+                              **LVL #{xpvals[0]}**
+                              #{xpvals[1]} / #{xpvals[2]} *(#{xpvals[3]} %)*
+                              """
+
+                        emb =
+                            embed:
+                                title: "#{user.username} - User Profile"
+                                thumbnail:
+                                    url: user.avatarURL
+                                color: getColor user
+                                fields: [
+                                    {
+                                        name: "Username"
+                                        value: "#{user.username}##{user.discriminator}"
+                                        inline: false
+                                    }
+                                    {
+                                        name: "Nickname"
+                                        value: if typeof user.nick == "undefined" then "No nick set" else user.nick
+                                        inline: false
+                                    }
+                                    {
+                                        name: "ID"
+                                        value: user.id
+                                        inline: false
+                                    }
+                                    {
+                                        name: "Current Game"
+                                        value: "#{if user.game == null then 'No game played' else user.game.name}"
+                                        inline: false
+                                    }
+                                    {
+                                        name: "Current Status"
+                                        value: user.status
+                                        inline: false
+                                    }
+                                    {
+                                        name: "Joined Guild at"
+                                        value: user.joinedAt
+                                        inline: false
+                                    }
+                                    {
+                                        name: "Roles on this Guild"
+                                        value: getRoles()
+                                        inline: false
+                                    }
+                                    {
+                                        name: "GitHub"
+                                        value: "**#{github}**"
+                                        inline: false
+                                    }
+                                    {
+                                        name: "Level"
+                                        value: xpd
+                                        inline: false
+                                    }
+                                    {
+                                        name: "Reports"
+                                        value: "#{if reports == 0 then "This user has a white west!" else "**#{reports} reports** in past."}"
+                                        inline: false
+                                    }
+                                    {
+                                        name: "User Bots"
+                                        value: botout
+                                        inline: false
+                                    }
+                                ]
+                        bot.createMessage msg.channel.id, emb
 
 
 ###
@@ -488,8 +511,6 @@ exports.getid = (msg, args) ->
     roles += "#{r.name}  -  `#{r.id}`\n" for r in guild.roles.filter (role) -> role.name.toLowerCase().indexOf(query) > -1
     chans += "#{c.name}  -  `#{c.id}`\n" for c in guild.channels.filter (chan) -> chan.name.toLowerCase().indexOf(query) > -1
     membs += "#{m.username}  -  `#{m.id}`\n" for m in guild.members.filter (memb) -> memb.username.toLowerCase().indexOf(query) > -1
-
-    console.log roles, chans, membs
 
     emb =
         embed:
@@ -514,15 +535,19 @@ exports.getid = (msg, args) ->
 
     bot.createMessage msg.channel.id, emb
 
-
+###
+Report command: '!report <@mention/ID> <reason>'
+                '!report info <@mention/ID>'
+Report a user for rule-violating behaviour.
+Reports will be saved in the DB and counted.
+You can also get info about report state with 'info'
+argument or in the profile page of the user ('user' command)
+###
 exports.report = (msg, args) ->
     chan = msg.channel
     sender = msg.member
     victim = null
     reason = ""
-
-    if !funcs.checkPerm msg.member, 2
-        return
 
     if args.length < 2
         main.sendEmbed chan, """
@@ -530,21 +555,21 @@ exports.report = (msg, args) ->
                              `!rep info <@mention/ID>`  -  Get all reports of a member
                              """, "USAGE:", main.color.red
         return
-    
-    if msg.mentions.length > 0
-        victim = sender.guild.members.find (m) -> m.id == msg.mentions[0].id
-    else    
-        victim = sender.guild.members.find (m) -> m.id == args[0]
-
-    if typeof victim == "undefined"
-        main.sendEmbed chan, "Please enter a valid member!", "USAGE:", main.color.red
-        return
 
     if args[0] == "info"
+        if msg.mentions.length > 0
+            victim = sender.guild.members.find (m) -> m.id == msg.mentions[0].id
+        else    
+            victim = sender.guild.members.find (m) -> m.id == args[1]
+
+        if typeof victim == "undefined"
+            main.sendEmbed chan, "Please enter a valid member!", "USAGE:", main.color.red
+            return
+
         main.dbcon.query 'SELECT * FROM reports WHERE victim = ?', [victim.id], (err, res) ->
             if !err
                 if res.length == 0
-                    main.sendEmbed chan, "User #{victim.id} has a white west! :thumbsup:", "Reports", main.color.green
+                    main.sendEmbed chan, "User #{victim.mention} has a white west! :thumbsup:", "Reports", main.color.green
                 else
                     reps = ""
                     for row in res
@@ -557,6 +582,18 @@ exports.report = (msg, args) ->
                                          #{reps}
                                          """, "Reports", main.color.orange
     else
+        if !funcs.checkPerm msg.member, 2
+            return
+
+        if msg.mentions.length > 0
+            victim = sender.guild.members.find (m) -> m.id == msg.mentions[0].id
+        else    
+            victim = sender.guild.members.find (m) -> m.id == args[0]
+
+        if typeof victim == "undefined"
+            main.sendEmbed chan, "Please enter a valid member!", "USAGE:", main.color.red
+            return
+
         reason += " " + arg for arg in args[1..]
         main.dbcon.query 'INSERT INTO reports (victim, reporter, date, reason) VALUES (?, ?, ?, ?)', [victim.id, sender.id, main.getTime(), reason.substr 1], (err, res) ->
             if !err
@@ -564,4 +601,116 @@ exports.report = (msg, args) ->
                     main.sendEmbed chan, "Reported #{victim.mention} by #{sender.mention} for reason ```\n#{reason}\n```\nUser got reported **#{res.length} times** now.", "Report", main.color.orange
                     kerbholz = bot.getChannel "342627519825969172"
                     main.sendEmbed kerbholz, "Reported #{victim.mention} by #{sender.mention} for reason ```\n#{reason}\n```\nUser got reported **#{res.length} times** now.", "Report", main.color.orange
-        
+                    if res.length == 2
+                        bot.getDMChannel(victim.id)
+                            .then (chan) -> main.sendEmbed chan, """
+                                                                 :warning:   **WARNING**
+
+                                                                 You got reported **2 times** now on this guild by a staff member.
+                                                                 If you will show any rule-violating behaviour again, **you will be kicked or banned!**
+
+                                                                 Remember: Reports will **never** expire and will be always visible in your profile, also
+                                                                 all reports of you can be displayed every user with the `!report info` command.
+                                                                 Reports will not disappear if you quit and rejoin the guild!
+                                                                 """, null, main.color.red
+
+###
+XP command: '!xp'
+            '!xp <@mention/ID/name>'
+Get the current top 20 list of xp on the guild or
+get the specific xp ammount and need-xp for next
+level of a specified user.
+###
+exports.xp = (msg, args) ->
+    user = null
+    if args.length > 0
+        if msg.mentions.length > 0
+            user = msg.member.guild.members.find (m) -> m.id == msg.mentions[0].id
+        else
+            user = msg.member.guild.members.find (m) -> m.id == args[0]
+            if typeof user == "undefined"
+                user = msg.member.guild.members.find (m) -> m.username.toLowerCase().indexOf(args[0].toLowerCase()) > -1
+                if typeof user == "undefined"
+                    main.sendEmbed msg.channel, "User `#{args[0]}` could not be found!", "Error", main.color.red
+                    return
+        main.dbcon.query 'SELECT * FROM xp WHERE uid = ?', [user.id], (err, res) ->
+            if !err and res.length > 0
+                lvldata = funcs.xpgetlvl res[0].xp
+                main.sendEmbed msg.channel,
+                               """
+                               **LVL #{lvldata[0]}** *(#{res[0].xp} XP)*
+                               ```
+                               #{lvldata[1]} / #{lvldata[2]} (#{lvldata[3]} %)
+                               [#{"####################".substring(0, parseInt(20 * lvldata[3] / 100))}#{"                    ".substring(0, 20 - parseInt(20 * lvldata[3] / 100))}]
+                               ```
+                               """, "LVL OF USER #{user.username}", main.color.gold
+    else
+        toplist = ""
+        main.dbcon.query 'SELECT * FROM `xp` ORDER BY `xp`.`xp` DESC', (err, res) ->
+            if !err and res.length > 0
+                ind = 0
+                numbs = names = xps = ""
+                btf = (inpt, should) -> 
+                    while should > "#{inpt}".length
+                        inpt = "0" + inpt
+                    return inpt
+                maxxplen = "#{res[0].xp}".length
+                for row in res
+                    if ind < 20
+                        user = msg.member.guild.members.find (m) -> m.id == row.uid
+                        if !user.bot
+                            toplist += "**#{btf(++ind, 2)}**  -  `LVL #{btf(funcs.xpgetlvl(row.xp)[0], 2)} (#{btf(row.xp, maxxplen)} XP)`  -  #{if typeof user == "undefined" then "Not on server" else user.username}\n"
+                emb =
+                    embed:
+                        title: "GUILD XP TOP 20 LIST"
+                        color: main.color.gold
+                        description: toplist
+                bot.createMessage msg.channel.id, emb
+
+
+###
+Command Log command: '!cmdlog (<@mention/ID/name>)'
+Displays last send commands of the bot with username, command + arguments,
+timestamp and channel name.
+###
+exports.cmdlog = (msg, args) ->
+    user = null
+    if args.length > 0
+        if msg.mentions.length > 0
+            user = msg.member.guild.members.find (m) -> m.id == msg.mentions[0].id
+        else
+            user = msg.member.guild.members.find (m) -> m.id == args[0]
+            if typeof user == "undefined"
+                user = msg.member.guild.members.find (m) -> m.username.toLowerCase().indexOf(args[0].toLowerCase()) > -1
+                if typeof user == "undefined"
+                    main.sendEmbed msg.channel, "User `#{args[0]}` could not be found!", "Error", main.color.red
+                    return
+    outtext = temptext = "**CMD LIST**\n\n"
+    main.dbcon.query 'SELECT * FROM cmdlog', (err, res) ->
+        if !err and res.length > 0
+            for row in res
+                if typeof user == "undefined" or user.id == row.uid
+                    temptext += "#{row.uname} - `#{row.content}` in #{row.channame} @ #{row.timestamp}\n"
+                    if temptext.length > 2000
+                        bot.createMessage msg.channel.id, outtext
+                        return
+                    else
+                        outtext = temptext
+            bot.createMessage msg.channel.id, if outtext == "**CMD LIST**\n\n" then "<no commands executed>" else outtext
+
+
+###
+WhoIs command: '!whois <ID>'
+Getting the member/bot from an ID.
+###
+exports.whois = (msg, args) ->
+    if args.length > 0
+        user = msg.member.guild.members.find (m) -> m.id == args[0]
+        if typeof user == "undefined"
+            main.sendEmbed msg.channel, "No member found with the ID `#{args[0]}`.", null, main.color.red
+        else
+            main.sendEmbed msg.channel, """
+                                        Found #{if user.bot then "bot" else "member"} #{user.mention} (#{user.username}#{user.discriminator})
+                                        """, null, main.color.gold
+    else
+        main.sendEmbed msg.channel, "`!whois <ID>`", "USAGE:", main.color.red
