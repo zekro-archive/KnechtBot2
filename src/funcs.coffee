@@ -115,6 +115,7 @@ exports.addbot = (ubot, owner) ->
             setTimeout checkprefix, 22 * 3600 * 1000, ubot, false
             setTimeout checkprefix, 24 * 3600 * 1000, ubot, true
 
+
 ###
 Just a little function for Timeout in 'exports.addbot' to send warning message
 or kick a userbot if the prefix of the bot is not set in DB.

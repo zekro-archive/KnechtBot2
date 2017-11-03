@@ -1,0 +1,63 @@
+{
+    "token": "",
+    "prefix": "!",
+
+    "mysql": 
+    {
+        "host": "localhost",
+        "user": "root",
+        "passwd": "",
+        "database": "knecht"
+    },
+
+    "roles":
+    [
+        {
+            "name": "Owner",
+            "id": "307084559303049216",
+            "permlvl": 4,
+            "prefix": ""
+        },
+        {
+            "name": "Admin",
+            "id": "307084714890625024",
+            "permlvl": 3,
+            "prefix": "⚡"
+        },
+        {
+            "name": "Supporter",
+            "id": "307084853155725312",
+            "permlvl": 2,
+            "prefix": "🌠"
+        },
+        {
+            "name": "Moderator",
+            "id": "353193585727766539",
+            "permlvl": 2,
+            "prefix": "⚔"
+        },
+        {
+            "name": "Bot Owner",
+            "id": "324537251071787009",
+            "permlvl": 1,
+            "prefix": ""
+        }
+    ],
+
+    "invitereceivers": 
+    [
+	    "98719514908188672", 
+	    "221905671296253953"
+    ],
+
+    "exp": 
+    {
+        "interval": 0,
+        "xpinterval": 0,
+        "xpmsgmultiplier": 0,
+        "lvldiff": 0,
+        "reports": [0, 0],
+        "flatter": 0,
+        "cap": 0
+    }
+}

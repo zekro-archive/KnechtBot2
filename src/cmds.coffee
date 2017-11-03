@@ -18,6 +18,8 @@ exports.setBot = (b) -> bot = b
 
 # Just a test command for development purposes
 exports.test = (msg, args) ->
+    if !funcs.checkPerm msg.member, 4, msg.channel
+        return
     console.log msg.channel.type
     # funcs.xpchange msg.member, -8
     # RETURN ROLENAMES IN CONSOLE
@@ -37,20 +39,57 @@ Help command: '!help'
 Sends all command invokes in a private message.
 ###
 exports.help = (msg, args) ->
-    cmdlist = ""
-    for invoke of main.commands
-        cmdlist += ":white_small_square:  **`#{invoke}`**  -  #{main.commands[invoke][1]}\n"
-    bot.getDMChannel(msg.author.id)
-        .then (chan) ->
-            main.sendEmbed chan,
-                           """
-                           Hey! :wave:
-
-                           Currently, this bot is in early developent, so a lot of functions of the old Knecht Bot will be implemented later ;)
-
-                           **Commands:**
-                           #{cmdlist}
-                           """
+    everyone = botowners = staff = admins = owner = ""
+    cmds = main.commands
+    for invoke of cmds
+        console.log invoke, cmds[invoke][2]
+        cstr = ":white_small_square:  `!#{invoke}`  -  #{cmds[invoke][1]}\n"
+        switch cmds[invoke][2]
+            when 1
+                botowners += cstr
+            when 2
+                staff += cstr
+            when 3
+                admins += cstr
+            when 4
+                owner += cstr
+            else
+                everyone += cstr
+    ifepty = (inpt) -> if inpt == "" then "- no commands -" else inpt
+    emb =
+        embed:
+            description: "Here you have an overview of all commands of this bot, sorted by required permission levels:"
+            color: 0xedde0e
+            fields: [
+                {
+                    name: "[0] - everyone"
+                    value: ifepty everyone
+                    inline: false
+                }
+                {
+                    name: "[1] - Bot Owners"
+                    value: ifepty botowners
+                    inline: false
+                }
+                {
+                    name: "[2] - Staff"
+                    value: ifepty staff
+                    inline: false
+                }
+                {
+                    name: "[3] - Admins"
+                    value: ifepty admins
+                    inline: false
+                }
+                {
+                    name: "[4] - zekro only"
+                    value: ifepty owner
+                    inline: false
+                }
+            ]
+    bot.getDMChannel msg.member.id
+        .then (chan) -> bot.createMessage chan.id, emb
+    bor.deleteMessage msg.channel.id, msg.id
 
 
 ###
@@ -59,7 +98,6 @@ Send a message, can be also an embeded message (with customizable color) with th
 ###
 exports.say = (msg, args) ->
     if !funcs.checkPerm msg.member, 2, msg.channel
-        console.log "Not permitted"
         return
     if args.length > 0
         argstr = ""
@@ -159,6 +197,14 @@ exports.invite = (msg, args) ->
     if args.length > 0
         bid = args[0]
         main.botInvites[args[0]] = msg.member
+        bot.getDMChannel msg.member.id
+            .then (chan) -> main.sendEmbed chan, """
+                                                 Because bot invites need's to be accepted manually, the invite link was send to the admins!
+                                                 One of them will accept it as soon as possible.
+                                                 **Please stay patient** and don't send your invite multiple times!
+                                                 It will take approximately 12 to 24 hours until someone will accept if no admin is online
+                                                 currently.
+                                                 """, null, main.color.gold
         for u in main.inviteReceivers
             bot.getDMChannel(u)
                 .then (chan) ->
@@ -200,42 +246,43 @@ exports.prefix = (msg, args) ->
                         return
                     main.sendEmbed chan, "Prefix successfully set to `#{prefix}`!", "Error", main.color.green
 
-    list = ->
-        out = unset = whitelisted = ""
-        main.dbcon.query 'SELECT * FROM userbots', (err, res) ->
-            if !err and row != null
-                maxlen = 0
-                for row in res
-                    maxlen = if row.prefix.length > maxlen then row.prefix.length else maxlen
-                btf = (inpt) ->
-                    out = inpt
-                    while out.length < maxlen
-                        out += " "
-                    return out
-                for row in res
-                    ubot = sender.guild.members.find (m) -> m.id == "#{row.botid}"
-                    uowner = sender.guild.members.find (m) -> m.id == "#{row.ownerid}"            
-                    if typeof ubot != "undefined" and typeof uowner != "undefined"
-                        if row.prefix == "UNSET" and row.whitelisted == 0
-                            unset += "#{ubot.username} *(#{uowner.username})*\n"
-                        else if row.whitelisted == 0
-                            out += "#{btf row.prefix}  -  #{ubot.username} (#{uowner.username})\n"
-                        else if row.whitelisted == 1
-                            whitelisted += "#{ubot.username} *(#{uowner.username})*\n"
-                bot.createMessage chan.id, "**REGISTERED PREFIXES**\n\n```\n#{out}\n```\n\n\n**BOTS WITH UNSET PREFIX**\n\n#{unset}\n\n**WHITELISTED BOTS WITHOUT PREFIX**\n\n#{whitelisted}"
-
 
     if args.length < 2
-        list()
+        listbots sender, chan
     else
         if args[0] == "list"
-            list()
+            listbots sender, chan
             return
         botid = args[0]
         ownerid = sender.id
         prefix = args[1]
         set()
-        
+
+
+listbots = (sender, chan) ->
+    out = unset = whitelisted = ""
+    main.dbcon.query 'SELECT * FROM userbots', (err, res) ->
+        if !err and row != null
+            maxlen = 0
+            for row in res
+                maxlen = if row.prefix.length > maxlen then row.prefix.length else maxlen
+            btf = (inpt) ->
+                out = inpt
+                while out.length < maxlen
+                    out += " "
+                return out
+            for row in res
+                ubot = sender.guild.members.find (m) -> m.id == "#{row.botid}"
+                uowner = sender.guild.members.find (m) -> m.id == "#{row.ownerid}"            
+                if typeof ubot != "undefined" and typeof uowner != "undefined"
+                    if row.prefix == "UNSET" and row.whitelisted == 0
+                        unset += "#{ubot.username} *(#{uowner.username})*\n"
+                    else if row.whitelisted == 0
+                        out += "#{btf row.prefix}  -  #{ubot.username} (#{uowner.username})\n"
+                    else if row.whitelisted == 1
+                        whitelisted += "#{ubot.username} *(#{uowner.username})*\n"
+            bot.createMessage chan.id, "**REGISTERED PREFIXES**\n\n```\n#{out}\n```\n\n\n**BOTS WITH UNSET PREFIX**\n\n#{unset}\n\n**WHITELISTED BOTS WITHOUT PREFIX**\n\n#{whitelisted}"
+
 
 ###
 Info command: '!info'
@@ -395,6 +442,7 @@ exports.user = (msg, args) ->
                 when 1 then return 0x0ec4ed
                 when 2 then return 0x45ed0e
                 when 3 then return 0xed0e0e
+                when 4 then return 0xf4024f
 
         botout = ""
         main.dbcon.query 'SELECT * FROM userbots WHERE ownerid = ?', [user.id], (err, res) ->
@@ -462,13 +510,17 @@ exports.user = (msg, args) ->
                                     }
                                     {
                                         name: "Joined Guild at"
-                                        value: main.formatTime(user.joinedAt)
+                                        value: main.formatTime user.joinedAt
                                         inline: false
                                     }
                                     {
                                         name: "Roles on this Guild"
                                         value: getRoles()
                                         inline: false
+                                    }
+                                    {
+                                        name: "Permission level"
+                                        value: "Lvl.  `#{funcs.getPerm user}`"
                                     }
                                     {
                                         name: "GitHub"
@@ -600,7 +652,7 @@ exports.report = (msg, args) ->
             if !err
                 main.dbcon.query 'SELECT * FROM reports WHERE victim = ?', [victim.id], (err, res) ->
                     main.sendEmbed chan, "Reported #{victim.mention} by #{sender.mention} for reason ```\n#{reason}\n```\nUser got reported **#{res.length} times** now.", "Report", main.color.orange
-                    kerbholz = bot.getChannel "342627519825969172"
+                    kerbholz = bot.getChannel main.kerbholzid
                     main.sendEmbed kerbholz, "Reported #{victim.mention} by #{sender.mention} for reason ```\n#{reason}\n```\nUser got reported **#{res.length} times** now.", "Report", main.color.orange
                     if res.length == 2
                         bot.getDMChannel(victim.id)
@@ -614,6 +666,8 @@ exports.report = (msg, args) ->
                                                                  all reports of you can be displayed every user with the `!report info` command.
                                                                  Reports will not disappear if you quit and rejoin the guild!
                                                                  """, null, main.color.red
+                    main.sendEmbed 
+
 
 ###
 XP command: '!xp'
@@ -675,6 +729,8 @@ Displays last send commands of the bot with username, command + arguments,
 timestamp and channel name.
 ###
 exports.cmdlog = (msg, args) ->
+    if !funcs.checkPerm msg.member, 1, msg.channel
+        return
     user = null
     if args.length > 0
         if msg.mentions.length > 0
@@ -731,3 +787,93 @@ exports.restart = (msg, args) ->
     main.sendEmbed msg.channel, "Bot will restart now... :wave:", null, main.color.orange
         .then (m) -> fs.writeFile "restarted", "#{m.channel.id},#{m.id}"
     setTimeout ( -> process.exit(0)), 1000
+
+
+###
+Bots Utilities command: '!bots list'
+                        '!bots link <@BotMention> <@UserMention>'
+                        '!bots wl <@BotMention>'
+With this command for the staff team, we can easily change owners
+of bots or link new non-userbots to a member without changing
+values in the MySql DB.
+Same with the whitelist command, admins can whitelist and
+unwhitelist bots without a prefix, because some bots just
+don't have commands they need a prefix for.
+###
+exports.bots = (msg, args) ->
+    chan = msg.channel
+    help = ->
+        main.sendEmbed chan, """
+                             `!bots list`  -  List all userbots on this guild
+                             `!bots link <Bot Mention> <User Mention>`  -  Manually (re)link a bot to a user
+                             `!bots wl <Bot Mention>  -  Whitelist/Unwhitelist a bot from prefix list`
+                             """, "USAGE:", main.color.red
+
+    if args.length < 1
+        help()
+        return
+    
+    switch args[0]
+        when "list"
+            listbots msg.member, chan
+
+        when "link"
+            if !funcs.checkPerm msg.member, 2, msg.channel
+                return
+            if args.length < 3
+                help()
+            else
+                u1 = msg.mentions[0]
+                u2 = msg.mentions[1]
+                if typeof u1 == "undefined" or typeof u2 == "undefined"
+                    help()
+                else if (u1.bot and u2.bot) or (!u1.bot and !u2.bot)
+                    help()
+                else
+                    ubot = if u1.bot then u1 else u2
+                    user = if !u1.bot then u1 else u2
+                    main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
+                        if !err and res.length > 0
+                            main.dbcon.query 'UPDATE userbots SET ownerid = ? WHERE botid = ?', [user.id, ubot.id], (err, res) ->
+                                if err
+                                    main.sendEmbed chan, "An error occured while linking:\n```\n#{err}\n```", null, main.color.red
+                                else
+                                    main.sendEmbed chan, "Successfully linked bot #{ubot.mention} to member #{user.mention}.", null, main.color.green
+                        else if !err
+                            main.dbcon.query 'INSERT INTO userbots (botid, ownerid, prefix) VALUES (?, ?, "UNSET")', [ubot.id, user.id], (err, res) ->
+                                if err
+                                    main.sendEmbed chan, "An error occured while linking:\n```\n#{err}\n```", null, main.color.red
+                                else
+                                    main.sendEmbed chan, "Successfully linked bot #{ubot.mention} to member #{user.mention}.\nPrefix of bot is **UNSET**, please remember setting the prefix or whitelist the bot!", null, main.color.green
+
+        when "wl"
+            if !funcs.checkPerm msg.member, 3, msg.channel
+                return
+            if args.length < 2
+                help()
+            ubot = msg.mentions[0]
+            if typeof ubot == "undefined"
+                help()
+            else if !ubot.bot
+                help()
+            else
+                main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
+                    if err
+                        main.sendEmbed chan, "An error occured while whitelisting:\n```\n#{err}\n```", null, main.color.red
+                    else if res.length < 1
+                        main.sendEmbed chan, "This bot is not registered in the userbots database! Please link it with `!bots link`", null, main.color.red
+                    else if res[0].whitelisted == 0
+                        main.dbcon.query 'UPDATE userbots SET whitelisted = 1 WHERE botid = ?', [ubot.id], (err, res) ->
+                            if err
+                                main.sendEmbed chan, "An error occured while whitelisting:\n```\n#{err}\n```", null, main.color.red
+                            else
+                                main.sendEmbed chan, "Successfully whitelisted bot #{ubot.mention}.", null, main.color.green
+                    else if res[0].whitelisted == 1
+                        main.dbcon.query 'UPDATE userbots SET whitelisted == 0 WHERE botid = ?', [ubot.id], (err, res) ->
+                            if err
+                                main.sendEmbed chan, "An error occured while unwhitelisting:\n```\n#{err}\n```", null, main.color.red
+                            else
+                                main.sendEmbed chan, "Successfully unwhitelisted bot #{ubot.mention}.", null, main.color.green
+
+        else
+            help()
