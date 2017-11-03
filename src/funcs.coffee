@@ -27,12 +27,18 @@ Chekcing permission level of member.
 Returns if max permsision level, the user has,
 is bigger or even the required permission level.
 ###
-exports.checkPerm = (memb, lvl) ->
+exports.checkPerm = (memb, lvl, chan) ->
     maxperm = 0
     for rid in memb.roles
         if rid of main.perms
             perm = main.perms[rid]
             maxperm = if perm > maxperm then perm else maxperm
+    if maxperm < lvl
+        main.sendEmbed chan, """
+                             You are not permitted to use this command!
+                             *Required perm. lvl:   `#{lvl}`*
+                             *Your perm. lvl:   `#{maxperm}`*
+                             """, "Not permitted", main.color.red
     return maxperm >= lvl
 
 

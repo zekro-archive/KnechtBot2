@@ -13,6 +13,8 @@ var VERSION = "2.1.C";
 // Extending version with number of commits from github master branch
 VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
 
+info(`Started at ${getTime()}`);
+
 // Getting config object from json file if existent
 if (fs.existsSync("config.json")) {
     info("Loading config...")
@@ -46,7 +48,8 @@ const COMMANDS = {
     "rep":      [cmds.report, "*Alias for `report`*"],
     "xp":       [cmds.xp, "see xp toplist or xp of specific user"],
     "cmdlog":   [cmds.cmdlog, "get list of last executed commands"],
-    "whois":    [cmds.whois, "get a member/bot by ID"]
+    "whois":    [cmds.whois, "get a member/bot by ID"],
+    "restart":  [cmds.restart, "restart the bot (only for admins)"]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -115,6 +118,17 @@ bot.on('ready', () => {
     info(`ID: ${bot.user.id}\n\n`);
     // Setting the current members and online members as game message
     funcs.setStatsGame(bot.guilds.find(() => { return true; }));
+    // Checks if 'restart' file is existent
+    // -> Send 'restart finished" message if true into saved channel
+    //    and deletes file after sending.
+    if (fs.existsSync("restarted")) {
+        ids = fs.readFileSync('restarted', 'utf8').split(",");
+        fs.unlink("restarted", (err) => {
+            bot.editMessage(ids[0], ids[1], {embed: {description: "Restart finished. :v:", color: Color.green}});
+            if (err)
+                console.log(err);
+        });
+    }
 });
 
 // Message listener
@@ -207,6 +221,7 @@ function sendEmbed(chan, content, title, clr) {
 /**
  * Getting current system time  and date 
  * in formatted string
+ * @returns {*String} formated time stamp
  */
 function getTime() {
     function btf(inp) {
@@ -221,6 +236,28 @@ function getTime() {
 	h = btf(date.getHours()),
 	min = btf(date.getMinutes()),
     s = btf(date.getSeconds());
+    return `${d}.${m}.${y} - ${h}:${min}:${s}`;
+}
+
+/**
+ * Getting formatted time from
+ * unix time stamp.
+ * @param {*Number} timestamp
+ * @returns {*String} formated time stamp
+ */
+exports.formatTime = (timestamp) => {
+    function btf(inp) {
+    	if (inp < 10)
+	    return "0" + inp;
+    	return inp;
+    }
+    var date = new Date(timestamp),
+        y = date.getFullYear(),
+        m = btf(date.getMonth()),
+        d = btf(date.getDate()),
+        h = btf(date.getHours()),
+        min = btf(date.getMinutes()),
+        s = btf(date.getSeconds());
     return `${d}.${m}.${y} - ${h}:${min}:${s}`;
 }
 

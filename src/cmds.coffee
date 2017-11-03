@@ -2,6 +2,7 @@ main = require "./main.js"
 funcs = require "./funcs.coffee"
 aload = require "after-load"
 main = require "./main.js"
+fs = require "fs"
 
 # Getting bot instance from main script
 bot = null
@@ -57,7 +58,7 @@ Say command: '!say <-e(:[color])> <message>'
 Send a message, can be also an embeded message (with customizable color) with the bot.
 ###
 exports.say = (msg, args) ->
-    if !funcs.checkPerm msg.member, 2
+    if !funcs.checkPerm msg.member, 2, msg.channel
         console.log "Not permitted"
         return
     if args.length > 0
@@ -461,7 +462,7 @@ exports.user = (msg, args) ->
                                     }
                                     {
                                         name: "Joined Guild at"
-                                        value: user.joinedAt
+                                        value: main.formatTime(user.joinedAt)
                                         inline: false
                                     }
                                     {
@@ -582,7 +583,7 @@ exports.report = (msg, args) ->
                                          #{reps}
                                          """, "Reports", main.color.orange
     else
-        if !funcs.checkPerm msg.member, 2
+        if !funcs.checkPerm msg.member, 2, msg.channel
             return
 
         if msg.mentions.length > 0
@@ -714,3 +715,19 @@ exports.whois = (msg, args) ->
                                         """, null, main.color.gold
     else
         main.sendEmbed msg.channel, "`!whois <ID>`", "USAGE:", main.color.red
+
+
+###
+Restart command: '!restart'
+Stops the bot. Bash start script auto restarts the
+bot after shutdown or crash.
+Sender's channelID will be saved in this file to
+send back 'restart finished' message after restart.
+###
+exports.restart = (msg, args) ->
+    if !funcs.checkPerm msg.member, 3, msg.channel
+        return
+    fs.writeFile "restarted", msg.channel.id
+    main.sendEmbed msg.channel, "Bot will restart now... :wave:", null, main.color.orange
+        .then (m) -> fs.writeFile "restarted", "#{m.channel.id},#{m.id}"
+    setTimeout ( -> process.exit(0)), 1000
