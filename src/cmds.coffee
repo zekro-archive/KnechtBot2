@@ -42,7 +42,6 @@ exports.help = (msg, args) ->
     everyone = botowners = staff = admins = owner = ""
     cmds = main.commands
     for invoke of cmds
-        console.log invoke, cmds[invoke][2]
         cstr = ":white_small_square:  `!#{invoke}`  -  #{cmds[invoke][1]}\n"
         switch cmds[invoke][2]
             when 1
@@ -89,7 +88,7 @@ exports.help = (msg, args) ->
             ]
     bot.getDMChannel msg.member.id
         .then (chan) -> bot.createMessage chan.id, emb
-    bor.deleteMessage msg.channel.id, msg.id
+    bot.deleteMessage msg.channel.id, msg.id
 
 
 ###

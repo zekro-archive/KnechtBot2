@@ -9,7 +9,7 @@ const colors = require("colors");
 const aload = require('after-load');
 var config = null;
 
-var VERSION = "2.1.C";
+var VERSION = "2.3.C";
 // Extending version with number of commits from github master branch
 VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
 
@@ -31,13 +31,13 @@ var PREFIX  = config["prefix"];
 
 // Commands list with invokes
 const COMMANDS = {
-    "test":     [cmds.test, "just for testing"],
+    "test":     [cmds.test, "just for testing", 4],
     "help":     [cmds.help, "get this message"],
     "info":     [cmds.info, "get information about this bot"],
-    "say":      [cmds.say, "send messages with the bot (also embeds)"],
+    "say":      [cmds.say, "send messages with the bot (also embeds)", 2],
     "dev":      [cmds.dev, "get dev language roles"],
     "invite":   [cmds.invite, "invite a user bot"],
-    "prefix":   [cmds.prefix, "set prefies of your bot(s) or list them of all bots"],
+    "prefix":   [cmds.prefix, "set prefies of your bot(s) or list them of all bots", 1],
     "github":   [cmds.github, "link your github profile with discord or list all links"],
     "git":      [cmds.github, "*alias for `github`*"],
     "user":     [cmds.user, "get users profile"],
@@ -47,9 +47,10 @@ const COMMANDS = {
     "report":   [cmds.report, "report a user or get reports of a user"],
     "rep":      [cmds.report, "*Alias for `report`*"],
     "xp":       [cmds.xp, "see xp toplist or xp of specific user"],
-    "cmdlog":   [cmds.cmdlog, "get list of last executed commands"],
+    "cmdlog":   [cmds.cmdlog, "get list of last executed commands", 1],
     "whois":    [cmds.whois, "get a member/bot by ID"],
-    "restart":  [cmds.restart, "restart the bot (only for admins)"]
+    "restart":  [cmds.restart, "restart the bot", 3],
+    "bots":     [cmds.bots, "List all registered bots, manage bot links and whitelist", 2]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -61,6 +62,14 @@ for (var key in config["roles"]) {
     PERMS[role["id"]] = role["permlvl"];
     exports.rolepres[role["id"]] = role["prefix"];
 }
+
+// Getting bot invite receivers from config.json
+exports.inviteReceivers = []
+for (var ind in config["invitereceivers"])
+    exports.inviteReceivers.push(config["invitereceivers"][ind]);
+
+console.log(exports.inviteReceivers)
+
 
 // Just some color codes
 const Color = {
@@ -89,8 +98,7 @@ info("Database connected!")
 
 // Map for invited bots and their owners
 exports.botInvites = {}
-// List of users which get the invite acception message
-exports.inviteReceivers = ["98719514908188672"  /* SkillKiller */, "221905671296253953" /* zekro */]
+
 
 
 console.log(`\nKnechtBot V2 running on version ${VERSION}\n` + 
@@ -289,6 +297,10 @@ exports.commands = COMMANDS;
 exports.perms = PERMS;
 exports.version = VERSION;
 exports.config = config;
+
+// ID of 'kerbholz' channel, just because I don't want to hardcode it,
+// but hardcode it tho' xD
+exports.kerbholzid = "342627519825969172"
 
 /*
     +--------------------+

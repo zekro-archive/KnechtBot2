@@ -222,7 +222,9 @@ Function to get current lvl, xp to next lvl
 and progress from current total xp value.
 ###
 exports.xpgetlvl = (xpval) ->
-    getreq = (x) -> if x == 0 then 0 else 10000 * 1.2 ** (x-1)
+    start = main.config["exp"]["startlvl"]
+    delta = main.config["exp"]["delta"]
+    getreq = (x) -> if x == 0 then 0 else start * delta ** (x-1)
     lvl = 0
     while xpval > getreq(lvl)
         lvl++
