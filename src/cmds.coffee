@@ -20,7 +20,7 @@ exports.setBot = (b) -> bot = b
 exports.test = (msg, args) ->
     if !funcs.checkPerm msg.member, 4, msg.channel
         return
-    console.log msg.channel.type
+    console.log msg.member.guild.members.find (m) -> m.id = "333707981155729410"
     # funcs.xpchange msg.member, -8
     # RETURN ROLENAMES IN CONSOLE
     # console.log bot.guilds.find(-> return true).roles.map (m) -> return "#{m.name} - #{m.id}"
@@ -137,35 +137,26 @@ exports.dev = (msg, args) ->
     memb = msg.member
     chan = msg.channel
     guild = memb.guild
-    available = aload.$(aload "https://pastebin.com/raw/7UE5euBg")('pre').text().split(", ")
+    available = aload.$(aload "https://pastebin.com/raw/7UE5euBg")('pre').text().split ", "
 
     if args.length > 0
         entered = []
-        added = failed = ""
+        added = ""
         guildroles = guild.roles.map (r) -> return r
-        for arg in args
-            entered.push if "," in arg then arg.substring(0, arg.length - 1) else arg
+        entered.push(if "," in arg then arg.substring 0, arg.length - 1 else arg) for arg in args
         for rn in entered
             if rn in available
                 for role in guildroles
                     if role.name.toLowerCase() == rn
                         bot.addGuildMemberRole guild.id, memb.id, role.id
                         added += "#{role.name}, "
-                    else if role.name.toLowerCase() in entered
-                        failed += "#{role.name} (failed), "
-            else
-                failed += "#{rn} (not available), "
         main.sendEmbed msg.channel,
                        """
-                       Added roles:
+                       Successfully added roles:
                        ```
                        #{if added.length == 0 then "- none -" else added.substring 0, added.length - 2}
                        ```
-                       Failed adding roles:
-                       ```
-                       #{if failed.length == 0 then "- none -" else failed.substring 0, failed.length - 2}
-                       ```
-                       """,
+                       """
                        null,
                        main.color.gold
     else
@@ -326,6 +317,7 @@ exports.info = (msg, args) ->
                            :white_small_square:   [CoffeeScript](https://github.com/jashkenas/coffeescript)
                            :white_small_square:   [After-Load](https://www.npmjs.com/package/after-load)
                            :white_small_square:   [MySql](https://github.com/mysqljs/mysql)
+                           :white_small_square:   [PushBullet](https://github.com/alexwhitman/node-pushbullet-api)
                            """
                     inline: false,
                 } ]
@@ -876,3 +868,80 @@ exports.bots = (msg, args) ->
 
         else
             help()
+
+
+###
+Notification function command: '!nots add (<Pushbullet Token>)'
+                               '!nots toggle'
+                               '!nots remove'
+Enable your bot(s) to get notifications if they go offline unexpectedly.
+Also you can add ypur pushbullet token which will be saved in the
+userbots database to notify you via pushbullet over smartphone for
+example if your bot went down.
+###
+exports.notification = (msg, args) ->
+    sender = msg.member
+    chan = msg.channel
+
+    help = ->
+        main.sendEmbed chan, """
+                             `!nots add (<Pushbullet Token¹>)`  -  Get notificated if you bots goes offline
+                             `!nots toggle`  -  Pause/Unpause this service
+                             `!nots remove`  -  Remove your entry from this list (disabled notifications)
+                             ___
+                             * ¹ You can enter your Pushbullet API token to get notificated on your phone for example.
+                             **[Here](https://gist.github.com/zekroTJA/75d172968db923afce5272e54d431e4d)** you can read ybout how to get your Pushbullet API token.
+                             I will not publish the token anywhere and if you don't trust me or my team, just don't set your token.
+                             If you want to have your token removed for some reason, just use the `!nots remove` command.
+                             """, "USAGE:", main.color.red
+
+    main.dbcon.query 'SELECT * FROM userbots WHERE ownerid = ?', [sender.id], (err, res) ->
+        if err
+            return
+        if res.length < 1
+            main.sendEmbed chan, "You don't own any registered bot!", "Error", main.color.red
+        else
+            switch args[0]
+                when "add"
+                    main.dbcon.query 'UPDATE userbots SET enabled = 1, pbtoken = ? WHERE ownerid = ?', [(if typeof args[1] != "undefined" then args[1] else ""), sender.id], (err, res) ->
+                        if !err
+                            main.sendEmbed chan, "Successfully enabled notification service for your bot(s)", null, main.color.green
+                        else
+                            main.sendEmbed chan, "An error occured while executing SQL query.\n#{err}", "Error", main.color.red
+                when "toggle"
+                    main.dbcon.query 'UPDATE userbots SET enabled = 1 - enabled WHERE ownerid = ?', [sender.id], (err, res) ->
+                        if !err
+                            main.dbcon.query 'SELECT * FROM userbots WHERE ownerid = ?', [sender.id], (err, res) ->
+                                if res.length > 0
+                                    main.sendEmbed chan, "Successfully #{if res[0].enabled == 1 then "enabled" else "disabled"} notification service for your bot(s)", null, main.color.green
+                        else
+                            main.sendEmbed chan, "An error occured while executing SQL query.\n#{err}", "Error", main.color.red
+                when "remove"
+                    main.dbcon.query 'UPDATE userbots SET enabled = 0, pbtoken = "" WHERE ownerid = ?', [sender.id], (err, res) ->
+                        if !err
+                            main.sendEmbed chan, "Successfully cleared your entry from notification system.", null, main.color.green
+                        else
+                            main.sendEmbed chan, "An error occured while executing SQL query.\n#{err}", "Error", main.color.red
+                else
+                    help()
+
+            bot.deleteMessage chan.id, msg.id
+
+
+exports.exec = (msg, args) ->
+    if !funcs.checkPerm msg.member, 4, msg.channel
+        return
+    command = args.join(' ')
+    fs.writeFileSync 'src/exec.coffee', """
+                                    exports.ex = (bot, msg) ->
+                                        #{command}
+                                    """
+    setTimeout (-> 
+        try
+            ext = require "./exec.coffee"
+            ext.ex bot, msg
+        catch e
+            console.log e
+        finally
+            fs.unlink 'src/exec.coffee'
+    ), 500

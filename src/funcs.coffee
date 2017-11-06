@@ -1,6 +1,7 @@
 main = require "./main.js"
 mysql = require "mysql"
 gspread = require "google-spreadsheet"
+PushBullet = require "pushbullet"
 
 # Getting bot instance from main script
 bot = null
@@ -299,3 +300,25 @@ exports.welcomeStaff = ->
     bot.editMessage "307085753744228356", "374574875572043776", emb
 
 
+###
+Handler for bot notification system, checking for bots going
+offline and sending notification via discord DM and pushpullet
+notification, if token was set with !nots command.
+###
+exports.notshandle = (after, presence) ->
+    if after.bot and after.status == "offline" && presence.status != "offline"
+        main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [after.id], (err, res) ->
+            if err
+                return
+            if res.length > 0
+                if res[0].enabled == 1
+                    ubot = after.guild.members.find (m) -> m.id = "#{res[0].botid}"
+                    uname = if typeof ubot != "undefined" then ubot.username else "~invalid~"
+                    bot.getDMChannel res[0].ownerid
+                        .then (chan) -> main.sendEmbed chan, "Your bot #{if typeof ubot == "undefined" then "*invalid*" else ubot.mention} (`#{uname}`) just went offline!", "Notification", main.color.red
+                    if res[0].pbtoken != ""
+                        push = new PushBullet(res[0].pbtoken)
+                        push.note {}, "BOT NOTIFICATION", "Your bot '#{uname}' just went offline!", (err, res) ->
+                            if err
+                                bot.getDMChannel res[0].ownerid
+                                    .then (chan) -> main.sendEmbed chan, "Failed to send PushBullet message! Please check your entered token!", "Error", main.color.red

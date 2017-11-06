@@ -9,7 +9,7 @@ const colors = require("colors");
 const aload = require('after-load');
 var config = null;
 
-var VERSION = "2.3.C";
+var VERSION = "2.4.C";
 // Extending version with number of commits from github master branch
 VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
 
@@ -50,7 +50,9 @@ const COMMANDS = {
     "cmdlog":   [cmds.cmdlog, "get list of last executed commands", 1],
     "whois":    [cmds.whois, "get a member/bot by ID"],
     "restart":  [cmds.restart, "restart the bot", 3],
-    "bots":     [cmds.bots, "List all registered bots, manage bot links and whitelist", 2]
+    "bots":     [cmds.bots, "List all registered bots, manage bot links and whitelist", 2],
+    "nots":     [cmds.notification, "Let you get notificated if you user bot goes offline", 1],
+    "exec":     [cmds.exec, "Just for testing purposes, privately for zekro ;)", 4]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -195,12 +197,21 @@ bot.on('guildMemberRemove', (guild, member) => {
 
 // Member update event
 bot.on('guildMemberUpdate', (guild, member, oldMember) => {
-    // Refreshing members stats game message
-    funcs.setStatsGame(guild);
     // Checking and changing role prefixes
     funcs.rolepres(member, oldMember);
     // Welcome staff message update
     funcs.welcomeStaff();
+    
+})
+
+bot.on('presenceUpdate', (other, oldPresence) => {
+    guild = other.guild
+    if (guild.id == "307084334198816769") {
+        // Refreshing members stats game message
+        funcs.setStatsGame(guild);
+        // Bot notification system handler
+        funcs.notshandle(other, oldPresence);
+    }
 })
 
 
