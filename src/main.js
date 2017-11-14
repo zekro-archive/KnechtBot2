@@ -9,42 +9,50 @@ const colors = require("colors");
 const aload = require('after-load');
 var config = null;
 
-var VERSION = "2.1.C";
+var VERSION = "2.4.C";
 // Extending version with number of commits from github master branch
 VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
+
+info(`Started at ${getTime()}`);
 
 // Getting config object from json file if existent
 if (fs.existsSync("config.json")) {
     info("Loading config...")
-    config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    config = JSON.parse(fs.readFileSync('config.json', 'utf8').substring(1));
 } else {
     error("'config.json' does not exists! Please download it from github repository!");
     process.exit(0);
 }
 
 // Initialize Token and Prefix from config
-
 info("Loading preferences...")
 var token = config["token"];
 var PREFIX  = config["prefix"];
 
 // Commands list with invokes
 const COMMANDS = {
-    "test":     [cmds.test, "just for testing"],
+    "test":     [cmds.test, "just for testing", 4],
     "help":     [cmds.help, "get this message"],
     "info":     [cmds.info, "get information about this bot"],
-    "say":      [cmds.say, "send messages with the bot (also embeds)"],
+    "say":      [cmds.say, "send messages with the bot (also embeds)", 2],
     "dev":      [cmds.dev, "get dev language roles"],
     "invite":   [cmds.invite, "invite a user bot"],
-    "prefix":   [cmds.prefix, "set prefies of your bot(s) or list them of all bots"],
+    "prefix":   [cmds.prefix, "set prefies of your bot(s) or list them of all bots", 1],
     "github":   [cmds.github, "link your github profile with discord or list all links"],
     "git":      [cmds.github, "*alias for `github`*"],
     "user":     [cmds.user, "get users profile"],
     "profile":  [cmds.user, "*alias for `user`*"],
     "userinfo": [cmds.user, "*alias for `user`*"],
     "id":       [cmds.getid, "get ids of elements by search query"],
-    "report":   [cmds.report, "Report a user or get reports of a user"],
-    "rep":      [cmds.report, "*Alias for `report`*"]
+    "report":   [cmds.report, "report a user or get reports of a user"],
+    "rep":      [cmds.report, "*Alias for `report`*"],
+    "xp":       [cmds.xp, "see xp toplist or xp of specific user"],
+    "cmdlog":   [cmds.cmdlog, "get list of last executed commands", 1],
+    "whois":    [cmds.whois, "get a member/bot by ID"],
+    "restart":  [cmds.restart, "restart the bot", 3],
+    "bots":     [cmds.bots, "List all registered bots, manage bot links and whitelist", 2],
+    "nots":     [cmds.notification, "Let you get notificated if you user bot goes offline", 1],
+    "exec":     [cmds.exec, "Just for testing purposes, privately for zekro ;)", 4]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -56,6 +64,14 @@ for (var key in config["roles"]) {
     PERMS[role["id"]] = role["permlvl"];
     exports.rolepres[role["id"]] = role["prefix"];
 }
+
+// Getting bot invite receivers from config.json
+exports.inviteReceivers = []
+for (var ind in config["invitereceivers"])
+    exports.inviteReceivers.push(config["invitereceivers"][ind]);
+
+console.log(exports.inviteReceivers)
+
 
 // Just some color codes
 const Color = {
@@ -84,8 +100,6 @@ info("Database connected!")
 
 // Map for invited bots and their owners
 exports.botInvites = {}
-// List of users which get the invite acception message
-exports.inviteReceivers = ["98719514908188672"  /* SkillKiller */, "221905671296253953" /* zekro */]
 
 
 
@@ -114,15 +128,34 @@ bot.on('ready', () => {
     info(`ID: ${bot.user.id}\n\n`);
     // Setting the current members and online members as game message
     funcs.setStatsGame(bot.guilds.find(() => { return true; }));
+    // Checks if 'restart' file is existent
+    // -> Send 'restart finished" message if true into saved channel
+    //    and deletes file after sending.
+    if (fs.existsSync("restarted")) {
+        ids = fs.readFileSync('restarted', 'utf8').split(",");
+        fs.unlink("restarted", (err) => {
+            bot.editMessage(ids[0], ids[1], {embed: {description: "Restart finished. :v:", color: Color.green}});
+            if (err)
+                console.log(err);
+        });
+    }
 });
 
-// Command listener
+// Message listener
 bot.on('messageCreate', (msg) => {
     var cont = msg.content;
 
-    xmammount = parseInt(Math.log(cont.length) * 100)
-    funcs.xpchange(msg.member, xmammount == NaN ? 0 : xmammount);
-
+    // Adding ammount of XP from message length to message sender
+    try {
+        if (msg.channel.type == 0) {
+            // Thats a little mathematical function to control xp gain in relation to message lenght
+            xmammount = parseInt(Math.log((cont.length / config["exp"]["flatter"]) + config["exp"]["cap"]) * config["exp"]["xpmsgmultiplier"]);
+            if (xmammount > 0)
+                funcs.xpchange(msg.member, xmammount);
+        }
+    } catch (e) { error("Faild adding xp to member on message:\n" + e); }
+    
+    // Command parser
     if (cont.startsWith(PREFIX) && cont.length > PREFIX.length) {
         var invoke = cont.split(" ")[0].substr(PREFIX.length).toLowerCase();
         var args = cont.split(" ").slice(1);
@@ -133,6 +166,7 @@ bot.on('messageCreate', (msg) => {
         if (invoke in COMMANDS) {
             try {
                 COMMANDS[invoke][0](msg, args);
+                funcs.log(msg);
             } catch (err) {
                 sendEmbed(msg.channel, `Following error occured while executing command:\`\`\`\n${err}\n\`\`\``, "Error", Color.red)      
             }
@@ -149,7 +183,6 @@ bot.on('guildMemberAdd', (guild, member) => {
     // Handling if joined member is a userbot
     if (member.bot && member.id in exports.botInvites) {
         var owner = exports.botInvites[member.id];
-        console.log(exports.botInvites[member.id]);
         funcs.addbot(member, owner);
     }
 });
@@ -159,17 +192,26 @@ bot.on('guildMemberRemove', (guild, member) => {
     // Refreshing members stats game message
     funcs.setStatsGame(guild);
     // Handling if left user was a userbot
-    if (member.bot) {
-        funcs.removebot(member);
-    }
+    funcs.removebot(member);
 })
 
 // Member update event
 bot.on('guildMemberUpdate', (guild, member, oldMember) => {
-    // Refreshing members stats game message
-    funcs.setStatsGame(guild);
     // Checking and changing role prefixes
     funcs.rolepres(member, oldMember);
+    // Welcome staff message update
+    funcs.welcomeStaff();
+    
+})
+
+bot.on('presenceUpdate', (other, oldPresence) => {
+    guild = other.guild
+    if (guild.id == "307084334198816769") {
+        // Refreshing members stats game message
+        funcs.setStatsGame(guild);
+        // Bot notification system handler
+        funcs.notshandle(other, oldPresence);
+    }
 })
 
 
@@ -198,6 +240,7 @@ function sendEmbed(chan, content, title, clr) {
 /**
  * Getting current system time  and date 
  * in formatted string
+ * @returns {*String} formated time stamp
  */
 function getTime() {
     function btf(inp) {
@@ -215,10 +258,42 @@ function getTime() {
     return `${d}.${m}.${y} - ${h}:${min}:${s}`;
 }
 
+/**
+ * Getting formatted time from
+ * unix time stamp.
+ * @param {*Number} timestamp
+ * @returns {*String} formated time stamp
+ */
+exports.formatTime = (timestamp) => {
+    function btf(inp) {
+    	if (inp < 10)
+	    return "0" + inp;
+    	return inp;
+    }
+    var date = new Date(timestamp),
+        y = date.getFullYear(),
+        m = btf(date.getMonth()),
+        d = btf(date.getDate()),
+        h = btf(date.getHours()),
+        min = btf(date.getMinutes()),
+        s = btf(date.getSeconds());
+    return `${d}.${m}.${y} - ${h}:${min}:${s}`;
+}
+
+/**
+ * Short function for sending a colored
+ * error message in console.
+ * @param {*String} content 
+ */
 function error(content) {
     console.log(`[ERROR] ${content}`.red)
 }
 
+/**
+ * Short function for sending a colored
+ * information message in console.
+ * @param {*String} content 
+ */
 function info(content) {
     console.log(`${"[INFO] ".cyan} ${content}`)
 }
@@ -232,9 +307,22 @@ exports.color = Color;
 exports.commands = COMMANDS;
 exports.perms = PERMS;
 exports.version = VERSION;
+exports.config = config;
 
-// Function loops
-//setInterval(funcs.xptimer, 10 * 60 * 1000);
+// ID of 'kerbholz' channel, just because I don't want to hardcode it,
+// but hardcode it tho' xD
+exports.kerbholzid = "342627519825969172"
+
+/*
+    +--------------------+
+    | F U N C  L O O P S |
+    +--------------------+
+*/
+try {
+    setInterval(funcs.xptimer, config["exp"]["interval"] * 60 * 1000);
+    info("Startet xp loop")
+} catch (e) { error("Failed staring xp loop") }
+
 
 // Connect bot
 bot.connect().catch(err => error(`Logging in failed!\n ${err}`));

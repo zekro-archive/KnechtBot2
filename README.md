@@ -14,6 +14,7 @@ This is a very powerfull bot administrating my development discord and making th
 Below, you will se some functions of this bot:
 
 ---
+## Functions
 
 ### UBAAMS™ (Userbot Administration and Managing System)
 With the command `!invite <BotID>`, users can add their own bots on the guild to show others their functions and ask for help.  
