@@ -26,8 +26,9 @@ if (fs.existsSync("config.json")) {
 
 // Initialize Token and Prefix from config
 info("Loading preferences...")
-var token = config["token"];
-var PREFIX  = config["prefix"];
+var token = config.token;
+var PREFIX  = config.prefix;
+exports.botprefix = config.botprefix
 
 // Commands list with invokes
 const COMMANDS = {
@@ -59,16 +60,17 @@ const COMMANDS = {
 info("Setting up role preferences...")
 const PERMS = {}
 exports.rolepres = {}
-for (var key in config["roles"]) {
-    var role = config["roles"][key];
-    PERMS[role["id"]] = role["permlvl"];
-    exports.rolepres[role["id"]] = role["prefix"];
+for (var key in config.roles) {
+    var role = config.roles[key];
+    PERMS[role.id] = role.permlvl;
+    if (role.prefix != "")
+        exports.rolepres[role.id] = role.prefix;
 }
 
 // Getting bot invite receivers from config.json
 exports.inviteReceivers = []
-for (var ind in config["invitereceivers"])
-    exports.inviteReceivers.push(config["invitereceivers"][ind]);
+for (var ind in config.invitereceivers)
+    exports.inviteReceivers.push(config.invitereceivers[ind]);
 
 console.log(exports.inviteReceivers)
 
@@ -88,10 +90,10 @@ const Color = {
 // Setting up mysql connectipn properties from config file
 info("Setting up MySql connection...")
 exports.dbcon = mysql.createConnection({
-    host: config["mysql"]["host"],
-    user: config["mysql"]["user"],
-    password: config["mysql"]["passwd"],
-    database: config["mysql"]["database"]
+    host: config.mysql.host,
+    user: config.mysql.user,
+    password: config.mysql.passwd,
+    database: config.mysql.database
 });
 
 // Connecting database

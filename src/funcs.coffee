@@ -97,7 +97,7 @@ exports.addbot = (ubot, owner) ->
         return
     main.dbcon.query 'INSERT INTO userbots (botid, ownerid, prefix) VALUES (?, ?, "UNSET")', [ubot.id, owner.id], (err, res) ->
         if !err
-            ubot.edit {nick: "🤖 #{ubot.username} (#{if owner.nick != null then owner.nick else owner.username})"}
+            ubot.edit {nick: "#{main.botprefix} #{ubot.username} (#{if owner.nick != null then owner.nick else owner.username})"}
             bot.addGuildMemberRole ubot.guild.id, ubot.id, "309622223285780481"
             bot.addGuildMemberRole owner.guild.id, owner.id, "324537251071787009"
             for u in main.inviteReceivers

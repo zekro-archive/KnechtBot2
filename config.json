@@ -44,6 +44,8 @@
         }
     ],
 
+    "botprefix": "🤖",
+
     "invitereceivers": 
     [
 	    "98719514908188672", 
