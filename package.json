@@ -6,17 +6,17 @@
     ""
   ],
   "license": "MIT",
-  "main": "main.js",
+  "main": "./src/main.js",
   "author": "zekro Development",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/zekroTJA/KnechtBot2"
   },
   "scripts": {
-    "start": "node main.js"
+    "start": "node src/main.js"
   },
   "bugs": {
-    "url": ""
+    "url": "https://github.com/zekroTJA/KnechtBot2/issues"
   },
   "engines": {
     "node": ">=6.0.0"
@@ -26,7 +26,6 @@
     "coffee-script": "^1.12.7",
     "after-load": "^1.0.4",
     "mysql": "^2.15.0",
-    "google-spreadsheet": "^2.0.4",
     "colors": "^1.1.2"
   },
   "devDependencies": {}

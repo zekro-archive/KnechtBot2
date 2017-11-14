@@ -7,7 +7,6 @@ const cmds = require("./cmds.coffee");
 const funcs = require("./funcs.coffee");
 const colors = require("colors");
 const aload = require('after-load');
-
 var config = null;
 
 var VERSION = "2.1.C";
@@ -120,6 +119,10 @@ bot.on('ready', () => {
 // Command listener
 bot.on('messageCreate', (msg) => {
     var cont = msg.content;
+
+    xmammount = parseInt(Math.log(cont.length) * 100)
+    funcs.xpchange(msg.member, xmammount == NaN ? 0 : xmammount);
+
     if (cont.startsWith(PREFIX) && cont.length > PREFIX.length) {
         var invoke = cont.split(" ")[0].substr(PREFIX.length).toLowerCase();
         var args = cont.split(" ").slice(1);
@@ -229,6 +232,9 @@ exports.color = Color;
 exports.commands = COMMANDS;
 exports.perms = PERMS;
 exports.version = VERSION;
+
+// Function loops
+//setInterval(funcs.xptimer, 10 * 60 * 1000);
 
 // Connect bot
 bot.connect().catch(err => error(`Logging in failed!\n ${err}`));

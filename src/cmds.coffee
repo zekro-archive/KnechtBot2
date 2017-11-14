@@ -17,8 +17,9 @@ exports.setBot = (b) -> bot = b
 
 # Just a test command for development purposes
 exports.test = (msg, args) ->
-    RETURN ROLENAMES IN CONSOLE
-    console.log bot.guilds.find(-> return true).roles.map (m) -> return "#{m.name} - #{m.id}"
+    # funcs.xpchange msg.member, -8
+    # RETURN ROLENAMES IN CONSOLE
+    # console.log bot.guilds.find(-> return true).roles.map (m) -> return "#{m.name} - #{m.id}"
 
     # COLOR DEV ROLES LIKE GITHUB COLORS
     # clrs = JSON.parse require("fs").readFileSync('colors.json', 'utf8')

@@ -146,3 +146,18 @@ exports.rolepres = (after, before) ->
                         try after.edit {nick: "#{after.nick.substring 2, after.nick.length}"}
                         catch e then console.log e
                         bot.removeGuildMemberRole after.guild.id, after.id, "373081803487182849"
+
+
+exports.xpchange = (member, ammount) ->
+    main.dbcon.query 'SELECT * FROM xp WHERE uid = ?', [member.id], (err, res) ->
+        if !err and res.length == 0
+            main.dbcon.query 'INSERT INTO xp (uid, xp) VALUES (?, ?)', [member.id, ammount]
+        else if !err
+            main.dbcon.query 'UPDATE xp SET xp = xp + ? WHERE uid = ?', [ammount, member.id]
+
+
+exports.xptimer = ->
+    guild = bot.guilds.find (g) -> true
+    guild.members.filter (m) -> m.status != "offline"
+        .forEach (m) ->
+            exports.xpchange m, 15
