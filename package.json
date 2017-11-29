@@ -25,6 +25,7 @@
       "coffee-script": "^1.12.7",
       "after-load": "^1.0.4",
       "mysql": "^2.15.0",
+      "colors": "^1.1.2",  
       "pushbullet": "^2.1.0"
     },
     "devDependencies": {}
