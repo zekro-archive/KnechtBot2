@@ -18,7 +18,7 @@ info(`Started at ${getTime()}`);
 // Getting config object from json file if existent
 if (fs.existsSync("config.json")) {
     info("Loading config...")
-    config = JSON.parse(fs.readFileSync('config.json', 'utf8').substring(1));
+    config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 } else {
     error("'config.json' does not exists! Please download it from github repository!");
     process.exit(0);
