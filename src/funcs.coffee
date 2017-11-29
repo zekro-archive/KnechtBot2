@@ -1,6 +1,5 @@
 main = require "./main.js"
 mysql = require "mysql"
-gspread = require "google-spreadsheet"
 PushBullet = require "pushbullet"
 
 # Getting bot instance from main script
