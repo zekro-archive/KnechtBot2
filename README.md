@@ -4,7 +4,7 @@
     <strong>Server management system of zekro's Dev Discord<br>Complete reworked version of <a href="https://github.com/zekroTJA/regiusBot">KnechtBot</a> in NodeJS.</strong><br/><br/>
     <a href="https://stats.uptimerobot.com/WPBJjHp26"><img src="https://img.shields.io/uptimerobot/status/m779430970-e7fbeac99e0f5b24c277880c.svg"/></a>&nbsp;
     <a href="https://stats.uptimerobot.com/WPBJjHp26"><img src="https://img.shields.io/uptimerobot/ratio/m779430970-e7fbeac99e0f5b24c277880c.svg"/></a>&nbsp;
-    <a href=""><img src="https://img.shields.io/badge/current%20version-1.4.C42-07a5c1.svg"/></a>&nbsp;
+    <a href=""><img src="https://img.shields.io/badge/current%20version-1.4.C48-07a5c1.svg"/></a>&nbsp;
     <a href="https://travis-ci.org/zekroTJA/KnechtBot2"><img src="https://travis-ci.org/zekroTJA/KnechtBot2.svg?branch=master"/></a>
 </div>
 
