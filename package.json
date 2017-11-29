@@ -11,7 +11,8 @@
       "url": ""
     },
     "scripts": {
-      "start": "node src/main.js"
+      "start": "node src/main.js",
+      "test": "node src/main.js"  
     },
     "bugs": {
       "url": ""
