@@ -5,7 +5,6 @@
     <a href="https://stats.uptimerobot.com/WPBJjHp26"><img src="https://img.shields.io/uptimerobot/status/m779430970-e7fbeac99e0f5b24c277880c.svg"/></a>&nbsp;
     <a href="https://stats.uptimerobot.com/WPBJjHp26"><img src="https://img.shields.io/uptimerobot/ratio/m779430970-e7fbeac99e0f5b24c277880c.svg"/></a>&nbsp;
     <a href=""><img src="https://img.shields.io/github/languages/top/zekroTJA/KnechtBot2.svg"/></a>&nbsp;
-    <a href="https://travis-ci.org/zekroTJA/KnechtBot2"><img src="https://travis-ci.org/zekroTJA/KnechtBot2.svg?branch=master"/></a>
 </div>
 
 ---
