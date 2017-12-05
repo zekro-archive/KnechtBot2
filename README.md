@@ -43,3 +43,6 @@ With the `!report` command, the staff team has the ability to report members for
 ### XP system
 Yes, the new Knecht is now also having a little experience system, but now way better than the old one.  
 I don't want to talk much about how you'll get XP and how much, because you can look for in the code, if you want. But the specific numbers are set in the `config.json` and will not be published.
+
+### Link flagging
+All messages send on the guild will be scanned with a link filter, and if a message from a member with a permission level < **2** sends a message with a flagged link, it will be deleted, the member get's a warning via DM and the message content, channel name / ID, user ID and timestamp will be saved in the database and automatical punishments will follow at a special count of flags. 
