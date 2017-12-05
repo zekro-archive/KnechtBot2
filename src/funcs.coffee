@@ -1,6 +1,7 @@
 main = require "./main.js"
 mysql = require "mysql"
 PushBullet = require "pushbullet"
+fs = require 'fs'
 
 # Getting bot instance from main script
 bot = null
@@ -52,31 +53,6 @@ exports.getPerm = (memb) ->
             perm = main.perms[rid]
             maxperm = if perm > maxperm then perm else maxperm
     return maxperm
-
-###
-Sending welcome message to (new) member.
-###
-exports.welcome = (memb) ->
-    guild = memb.guild
-    bot.getDMChannel(memb.id)
-        .then (chan) ->
-            main.sendEmbed chan,
-                           """
-                           **Hey #{memb.mention} and welcome on zekro's Dev Discord!** :wave: 
-
-
-                           I tell you some interesting stuff you could need to know about this server :^)
-
-                           In the #{bot.getChannel("307085753744228356").mention} cahannel, you can find some more information about the server and the team and please take a look in the #{bot.getChannel("364849566375215104").mention} channel to check out the server rules! ;)
-
-                           We have language roles on the guild which you can add with the command `!dev` *(please only use commands in #{bot.getChannel("358364792614027265").mention})*. Thats helpful if you need help in a special language, then you can mention the group and everyone who has experience in this language will be notificated.
-
-                           If you have some questions, feel free to ask some of the supporters and admins for help :)
-
-                           Now, have a lot of fun on the server and with the community! <3
-                           """,
-                           null,
-                           main.color.gold
 
 
 ###
@@ -321,3 +297,33 @@ exports.notshandle = (after, presence) ->
                             if err
                                 bot.getDMChannel res[0].ownerid
                                     .then (chan) -> main.sendEmbed chan, "Failed to send PushBullet message! Please check your entered token!", "Error", main.color.red
+
+
+###
+Sending welcome message to (new) member.
+###
+exports.welcome = (memb) ->
+    guild = memb.guild
+    bot.createMessage main.config.welcomechan, "<@#{memb.id}>"
+        .then (m) -> bot.deleteMessage main.config.welcomechan, m.id
+
+
+exports.createWelcMsg = ->
+    if fs.existsSync 'welcid'
+        cont = fs.readFileSync 'welcid', 'utf8'
+        bot.deleteMessage main.config.welcomechan, cont
+    emb =
+        embed:
+            description: "If you have read all of this, accept it with a reaction below and then you will get access to all public channels. ;)\n\n:point_down:"
+            color: main.color.cyan
+    bot.createMessage main.config.welcomechan, emb
+        .then (m) -> 
+            main.welcmsg = m
+            m.addReaction main.config.checkemote
+            fs.writeFile 'welcid', m.id
+
+
+exports.welcMsgAccepted = (msg, emote, userid) ->
+    if emote.name = main.config.checkemote
+        bot.addGuildMemberRole msg.member.guild.id, userid, main.config.autorole, "Joined server and accepted rules"
+        msg.removeReaction emote.name, userid

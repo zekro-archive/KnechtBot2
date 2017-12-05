@@ -5,6 +5,7 @@ const fs = require('fs');
 const mysql = require('mysql');
 const cmds = require("./cmds.coffee");
 const funcs = require("./funcs.coffee");
+const chatflag = require("./chatflag.js")
 const colors = require("colors");
 const aload = require('after-load');
 var config = null;
@@ -18,7 +19,7 @@ info(`Started at ${getTime()}`);
 // Getting config object from json file if existent
 if (fs.existsSync("config.json")) {
     info("Loading config...")
-    config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    config = JSON.parse(fs.readFileSync('config.json', 'utf8').substring(1));
 } else {
     error("'config.json' does not exists! Please download it from github repository!");
     process.exit(0);
@@ -32,28 +33,30 @@ exports.botprefix = config.botprefix
 
 // Commands list with invokes
 const COMMANDS = {
-    "test":     [cmds.test, "just for testing", 4],
-    "help":     [cmds.help, "get this message"],
-    "info":     [cmds.info, "get information about this bot"],
-    "say":      [cmds.say, "send messages with the bot (also embeds)", 2],
-    "dev":      [cmds.dev, "get dev language roles"],
-    "invite":   [cmds.invite, "invite a user bot"],
-    "prefix":   [cmds.prefix, "set prefies of your bot(s) or list them of all bots", 1],
-    "github":   [cmds.github, "link your github profile with discord or list all links"],
-    "git":      [cmds.github, "*alias for `github`*"],
-    "user":     [cmds.user, "get users profile"],
-    "profile":  [cmds.user, "*alias for `user`*"],
-    "userinfo": [cmds.user, "*alias for `user`*"],
-    "id":       [cmds.getid, "get ids of elements by search query"],
-    "report":   [cmds.report, "report a user or get reports of a user"],
-    "rep":      [cmds.report, "*Alias for `report`*"],
-    "xp":       [cmds.xp, "see xp toplist or xp of specific user"],
-    "cmdlog":   [cmds.cmdlog, "get list of last executed commands", 1],
-    "whois":    [cmds.whois, "get a member/bot by ID"],
-    "restart":  [cmds.restart, "restart the bot", 3],
-    "bots":     [cmds.bots, "List all registered bots, manage bot links and whitelist", 2],
-    "nots":     [cmds.notification, "Let you get notificated if you user bot goes offline", 1],
-    "exec":     [cmds.exec, "Just for testing purposes, privately for zekro ;)", 4]
+    "test":      [cmds.test, "just for testing", 4],
+    "help":      [cmds.help, "get this message"],
+    "info":      [cmds.info, "get information about this bot"],
+    "say":       [cmds.say, "send messages with the bot (also embeds)", 2],
+    "dev":       [cmds.dev, "get dev language roles"],
+    "invite":    [cmds.invite, "invite a user bot"],
+    "prefix":    [cmds.prefix, "set prefies of your bot(s) or list them of all bots", 1],
+    "github":    [cmds.github, "link your github profile with discord or list all links"],
+    "git":       [cmds.github, "*alias for `github`*"],
+    "user":      [cmds.user, "get users profile"],
+    "profile":   [cmds.user, "*alias for `user`*"],
+    "userinfo":  [cmds.user, "*alias for `user`*"],
+    "id":        [cmds.getid, "get ids of elements by search query"],
+    "report":    [cmds.report, "report a user or get reports of a user"],
+    "rep":       [cmds.report, "*Alias for `report`*"],
+    "xp":        [cmds.xp, "see xp toplist or xp of specific user"],
+    "cmdlog":    [cmds.cmdlog, "get list of last executed commands", 1],
+    "whois":     [cmds.whois, "get a member/bot by ID"],
+    "restart":   [cmds.restart, "restart the bot", 3],
+    "bots":      [cmds.bots, "List all registered bots, manage bot links and whitelist", 2],
+    "nots":      [cmds.notification, "Let you get notificated if you user bot goes offline", 1],
+    "exec":      [cmds.exec, "Just for testing purposes, privately for zekro ;)", 4],
+    "linkflags": [chatflag.list, "List flaged links", 0],
+    "flaglinks": [chatflag.edit, "Edit flaged links", 2]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -117,6 +120,7 @@ const bot = new Eris(token);
 // Giving bot instance to cmds and funcs script
 cmds.setBot(bot);
 funcs.setBot(bot);
+chatflag.setBot(bot);
 
 /*
     +-------------------+
@@ -141,11 +145,14 @@ bot.on('ready', () => {
                 console.log(err);
         });
     }
+    funcs.createWelcMsg()
 });
 
 // Message listener
 bot.on('messageCreate', (msg) => {
     var cont = msg.content;
+
+    chatflag.check(msg);
 
     // Adding ammount of XP from message length to message sender
     try {
@@ -214,6 +221,11 @@ bot.on('presenceUpdate', (other, oldPresence) => {
         // Bot notification system handler
         funcs.notshandle(other, oldPresence);
     }
+})
+
+bot.on('messageReactionAdd', (msg, emote, userid) => {
+    if (userid != bot.user.id && msg.id == exports.welcmsg.id)
+        funcs.welcMsgAccepted(msg, emote, userid)
 })
 
 
@@ -310,6 +322,7 @@ exports.commands = COMMANDS;
 exports.perms = PERMS;
 exports.version = VERSION;
 exports.config = config;
+exports.welcmsg;
 
 // ID of 'kerbholz' channel, just because I don't want to hardcode it,
 // but hardcode it tho' xD
@@ -327,4 +340,5 @@ try {
 
 
 // Connect bot
+bot.connect().catch(err => error(`Logging in failed!\n ${err}`));
 bot.connect().catch(err => error(`Logging in failed!\n ${err}`));
