@@ -28,7 +28,7 @@ function setBot(_bot) {
 function check(msg) {
     var memb = msg.member
     var cont = msg.content
-    if (_maxperm(memb) < 2) {
+    if (_maxperm(memb) < 1) {
         var linkflags = !flags.links ? [] : flags.links
         if (cont.contains(linkflags) && cont.contains(['http://', 'https://', 'www.'])) {
             bot.deleteMessage(msg.channel.id, msg.id, `Not allowed content: ${type.BLACKLISTED_LINK}`)
