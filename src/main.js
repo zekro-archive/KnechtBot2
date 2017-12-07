@@ -10,7 +10,7 @@ const colors = require("colors");
 const aload = require('after-load');
 var config = null;
 
-var VERSION = "2.4.C";
+var VERSION = "2.5.C";
 // Extending version with number of commits from github master branch
 VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
 
@@ -152,8 +152,11 @@ bot.on('ready', () => {
 bot.on('messageCreate', (msg) => {
     var cont = msg.content;
 
-    chatflag.check(msg);
-
+    try {
+        if (msg.channel.type == 0)
+            chatflag.check(msg);
+    } catch (err) {}
+    
     // Adding ammount of XP from message length to message sender
     try {
         if (msg.channel.type == 0) {
