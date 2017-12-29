@@ -3,7 +3,8 @@
     <h1> ~ KnechtBot V2 ~ </h1>
     <strong>Server management system of zekro's Dev Discord<br>Complete reworked version of <a href="https://github.com/zekroTJA/regiusBot">KnechtBot</a> in NodeJS.</strong><br/><br/>
     <a href="https://stats.uptimerobot.com/WPBJjHp26"><img src="https://img.shields.io/uptimerobot/status/m779430970-e7fbeac99e0f5b24c277880c.svg"/></a>&nbsp;
-    <a href="https://stats.uptimerobot.com/WPBJjHp26"><img src="https://img.shields.io/uptimerobot/ratio/m779430970-e7fbeac99e0f5b24c277880c.svg"/></a>
+    <a href="https://stats.uptimerobot.com/WPBJjHp26"><img src="https://img.shields.io/uptimerobot/ratio/m779430970-e7fbeac99e0f5b24c277880c.svg"/></a>&nbsp;
+    <a href=""><img src="https://img.shields.io/github/languages/top/zekroTJA/KnechtBot2.svg"/></a>&nbsp;
 </div>
 
 ---
@@ -42,3 +43,6 @@ With the `!report` command, the staff team has the ability to report members for
 ### XP system
 Yes, the new Knecht is now also having a little experience system, but now way better than the old one.  
 I don't want to talk much about how you'll get XP and how much, because you can look for in the code, if you want. But the specific numbers are set in the `config.json` and will not be published.
+
+### Link flagging
+All messages send on the guild will be scanned with a link filter, and if a message from a member with a permission level < **2** sends a message with a flagged link, it will be deleted, the member get's a warning via DM and the message content, channel name / ID, user ID and timestamp will be saved in the database and automatical punishments will follow at a special count of flags. 

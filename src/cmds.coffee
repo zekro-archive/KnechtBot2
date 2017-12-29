@@ -435,6 +435,11 @@ exports.user = (msg, args) ->
                 when 3 then return 0xed0e0e
                 when 4 then return 0xf4024f
 
+        orEmpty = (str) ->
+            if !str or str == ""
+                return 'empty'
+            return str
+
         botout = ""
         main.dbcon.query 'SELECT * FROM userbots WHERE ownerid = ?', [user.id], (err, res) ->
             if err or res.length == 0
@@ -471,42 +476,42 @@ exports.user = (msg, args) ->
                             embed:
                                 title: "#{user.username} - User Profile"
                                 thumbnail:
-                                    url: user.avatarURL
+                                    url: orEmpty user.avatarURL
                                 color: getColor user
                                 fields: [
                                     {
                                         name: "Username"
-                                        value: "#{user.username}##{user.discriminator}"
+                                        value: orEmpty "#{user.username}##{user.discriminator}"
                                         inline: false
                                     }
                                     {
                                         name: "Nickname"
-                                        value: if typeof user.nick == "undefined" then "No nick set" else user.nick
+                                        value: if user.nick then user.nick else "No nick set"
                                         inline: false
                                     }
                                     {
                                         name: "ID"
-                                        value: user.id
+                                        value: orEmpty user.id
                                         inline: false
                                     }
                                     {
                                         name: "Current Game"
-                                        value: "#{if user.game == null then 'No game played' else user.game.name}"
+                                        value: orEmpty "#{if user.game == null then 'No game played' else user.game.name}"
                                         inline: false
                                     }
                                     {
                                         name: "Current Status"
-                                        value: user.status
+                                        value: orEmpty user.status
                                         inline: false
                                     }
                                     {
                                         name: "Joined Guild at"
-                                        value: main.formatTime user.joinedAt
+                                        value: orEmpty main.formatTime user.joinedAt
                                         inline: false
                                     }
                                     {
                                         name: "Roles on this Guild"
-                                        value: getRoles()
+                                        value: orEmpty getRoles()
                                         inline: false
                                     }
                                     {
@@ -520,17 +525,17 @@ exports.user = (msg, args) ->
                                     }
                                     {
                                         name: "Level"
-                                        value: xpd
+                                        value: orEmpty xpd
                                         inline: false
                                     }
                                     {
                                         name: "Reports"
-                                        value: "#{if reports == 0 then "This user has a white west!" else "**#{reports} reports** in past."}"
+                                        value: orEmpty "#{if reports == 0 then "This user has a white west!" else "**#{reports} reports** in past."}"
                                         inline: false
                                     }
                                     {
                                         name: "User Bots"
-                                        value: botout
+                                        value: orEmpty botout
                                         inline: false
                                     }
                                 ]
