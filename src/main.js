@@ -141,6 +141,7 @@ bot.on('ready', () => {
                 console.log(err);
         });
     }
+    funcs.createWelcMsg()
 });
 
 // Message listener
@@ -214,6 +215,11 @@ bot.on('presenceUpdate', (other, oldPresence) => {
         // Bot notification system handler
         funcs.notshandle(other, oldPresence);
     }
+})
+
+bot.on('messageReactionAdd', (msg, emote, userid) => {
+    if (userid != bot.user.id && msg.id == exports.welcmsg.id)
+        funcs.welcMsgAccepted(msg, emote, userid)
 })
 
 
@@ -310,6 +316,7 @@ exports.commands = COMMANDS;
 exports.perms = PERMS;
 exports.version = VERSION;
 exports.config = config;
+exports.welcmsg;
 
 // ID of 'kerbholz' channel, just because I don't want to hardcode it,
 // but hardcode it tho' xD
