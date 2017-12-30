@@ -20,7 +20,8 @@ exports.setBot = (b) -> bot = b
 exports.test = (msg, args) ->
     if !funcs.checkPerm msg.member, 4, msg.channel
         return
-    console.log msg.member.guild.members.find (m) -> m.id = "333707981155729410"
+    console.log bot.getUserProfile msg.member.id
+    # console.log msg.member.guild.members.find (m) -> m.id = "333707981155729410"
     # funcs.xpchange msg.member, -8
     # RETURN ROLENAMES IN CONSOLE
     # console.log bot.guilds.find(-> return true).roles.map (m) -> return "#{m.name} - #{m.id}"
@@ -950,3 +951,117 @@ exports.exec = (msg, args) ->
         finally
             fs.unlink 'src/exec.coffee'
     ), 500
+
+
+exports.kick = (msg, args) ->
+    if !funcs.checkPerm msg.member, 3, msg.channel
+        return
+
+    if args.length < 3 || args.join(' ').split('-r ').length < 2
+        main.sendEmbed msg.channel, "`!kick <UserID> -r <Reason>`", "USAGE:", main.color.red
+
+    guild = msg.member.guild
+    reason = args.join(' ').split('-r ')[1]
+    victim = args[0]
+
+    if not guild.members.find((m) -> m.id == victim)
+        main.sendEmbed msg.channel, "Can not find a user on this guild with the ID ```#{victim}```", "ERROR", main.color.red
+        return
+
+    embk =
+        embed:
+            description: """#{guild.members.find((m) -> m.id == victim).username} got kicked from the Guild."""
+            color: 0xe74c3c
+            fields: [
+                {
+                    name: "Executor"
+                    value: """#{msg.author.username}"""
+                    inline: false
+                }
+                {
+                    name: "Reason"
+                    value: """#{reason}"""
+                    inline: false
+                }
+            ]
+    bot.createMessage main.kerbholzid, embk
+
+    emb =
+        embed:
+            description: """You got kicked from the Guild `#{guild.name}`"""
+            color: 0xe74c3c
+            image:
+                url: "https://media.giphy.com/media/H99r2HtnYs492/giphy.gif"
+            fields: [
+                {
+                    name: "Executor"
+                    value: """#{msg.author.username}"""
+                    inline: false
+                }
+                {
+                    name: "Reason"
+                    value: """#{reason}"""
+                    inline: false
+                }
+            ]
+    bot.getDMChannel victim
+        .then (chan) -> bot.createMessage chan.id, emb
+        .then ->
+            bot.kickGuildMember guild.id, victim, "Kicked by an staff member"
+
+
+exports.ban = (msg, args) ->
+    if !funcs.checkPerm msg.member, 4, msg.channel
+        return
+
+    if args.length < 3 || args.join(' ').split('-r ').length < 2
+        main.sendEmbed msg.channel, "`!ban <UserID> -r <Reason>`", "USAGE:", main.color.red
+
+    guild = msg.member.guild
+    reason = args.join(' ').split('-r ')[1]
+    victim = args[0]
+
+    if not guild.members.find((m) -> m.id == victim)
+        main.sendEmbed msg.channel, "Can not find a user on this guild with the ID ```#{victim}```", "ERROR", main.color.red
+        return
+
+    embk =
+        embed:
+            description: """#{guild.members.find((m) -> m.id == victim).username} got banned from the Guild."""
+            color: 0xe74c3c
+            fields: [
+                {
+                    name: "Executor"
+                    value: """#{msg.author.username}"""
+                    inline: false
+                }
+                {
+                    name: "Reason"
+                    value: """#{reason}"""
+                    inline: false
+                }
+            ]
+    bot.createMessage main.kerbholzid, embk
+
+    emb =
+        embed:
+            description: """You got banned from the Guild `#{guild.name}`"""
+            color: 0xe74c3c
+            image:
+                url: "https://media.giphy.com/media/H99r2HtnYs492/giphy.gif"
+            fields: [
+                {
+                    name: "Executor"
+                    value: """#{msg.author.username}"""
+                    inline: false
+                }
+                {
+                    name: "Reason"
+                    value: """#{reason}"""
+                    inline: false
+                }
+            ]
+    bot.getDMChannel victim
+        .then (chan) -> bot.createMessage chan.id, emb
+        .then ->
+            bot.banGuildMember guild.id, victim, 7, "Banned by an staff member"

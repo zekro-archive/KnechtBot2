@@ -1,12 +1,12 @@
-{
-    "token": "",
+﻿{
+    "token": "MzcyNjI5MzU1NDA0MzI4OTYx.DNhsCg.uOcZH7A9da8phEYqFoxrBBdsQdk",
     "prefix": "!",
 
     "mysql": 
     {
-        "host": "localhost",
+        "host": "46.228.192.99",
         "user": "root",
-        "passwd": "",
+        "passwd": "H0nd4_CBR_1998",
         "database": "knecht"
     },
 
@@ -41,26 +41,32 @@
             "id": "324537251071787009",
             "permlvl": 1,
             "prefix": ""
+        },
+	{
+            "name": "Partner",
+            "id": "380421514803019779",
+            "permlvl": 1,
+            "prefix": ""
         }
     ],
 
     "botprefix": "🤖",
 
-    "invitereceivers": 
-    [
-	    "98719514908188672", 
-	    "221905671296253953"
-    ],
+    "invitereceivers": ["98719514908188672", "221905671296253953"],
+
+    "welcomechan": "383917846742171649",
+    "autorole": "308187225256886272",
+    "checkemote": "✅",
 
     "exp": 
     {
-        "interval": 0,
-        "xpinterval": 0,
-        "xpmsgmultiplier": 0,
-        "startlvl": 0,
-        "delta": 0,
-        "reports": [0, 0],
-        "flatter": 0,
-        "cap": 0
+        "interval": 10,
+        "xpinterval": 15,
+        "xpmsgmultiplier": 150,
+        "delta": 1.2,
+	    "startlvl": 1000,
+	    "reports": [10000, 5],
+	    "flatter": 100,
+	    "cap": 0.8
     }
 }

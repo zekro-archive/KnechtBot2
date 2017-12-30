@@ -53,7 +53,9 @@ const COMMANDS = {
     "restart":  [cmds.restart, "restart the bot", 3],
     "bots":     [cmds.bots, "List all registered bots, manage bot links and whitelist", 2],
     "nots":     [cmds.notification, "Let you get notificated if you user bot goes offline", 1],
-    "exec":     [cmds.exec, "Just for testing purposes, privately for zekro ;)", 4]
+    "exec":     [cmds.exec, "Just for testing purposes, privately for zekro ;)", 4],
+    "kick":     [cmds.kick, "Kick a member from the guild", 3],
+    "ban":      [cmds.ban, "ban a member from the guild", 4]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
