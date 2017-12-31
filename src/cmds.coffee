@@ -663,7 +663,6 @@ exports.report = (msg, args) ->
                                                                  all reports of you can be displayed every user with the `!report info` command.
                                                                  Reports will not disappear if you quit and rejoin the guild!
                                                                  """, null, main.color.red
-                    main.sendEmbed 
 
 
 ###
@@ -1009,6 +1008,22 @@ exports.kick = (msg, args) ->
         .then ->
             bot.kickGuildMember guild.id, victim, "Kicked by an staff member"
 
+    main.dbcon.query 'INSERT INTO reports (victim, reporter, date, reason) VALUES (?, ?, ?, ?)', [victim, message.member.id, main.getTime(), "[KICK] " + reason], (err, res) ->
+        if !err
+            main.dbcon.query 'SELECT * FROM reports WHERE victim = ?', [victim.id], (err, res) ->
+                if res.length == 2
+                    bot.getDMChannel(victim.id)
+                        .then (chan) -> main.sendEmbed chan, """
+                                                             :warning:   **WARNING**
+
+                                                             You got reported **2 times** now on this guild by a staff member.
+                                                             If you will show any rule-violating behaviour again, **you will be kicked or banned!**
+
+                                                             Remember: Reports will **never** expire and will be always visible in your profile, also
+                                                             all reports of you can be displayed every user with the `!report info` command.
+                                                             Reports will not disappear if you quit and rejoin the guild!
+                                                             """, null, main.color.red
+
 
 exports.ban = (msg, args) ->
     if !funcs.checkPerm msg.member, 4, msg.channel
@@ -1065,3 +1080,19 @@ exports.ban = (msg, args) ->
         .then (chan) -> bot.createMessage chan.id, emb
         .then ->
             bot.banGuildMember guild.id, victim, 7, "Banned by an staff member"
+
+    main.dbcon.query 'INSERT INTO reports (victim, reporter, date, reason) VALUES (?, ?, ?, ?)', [victim, message.member.id, main.getTime(), "[BAN] " + reason], (err, res) ->
+        if !err
+            main.dbcon.query 'SELECT * FROM reports WHERE victim = ?', [victim.id], (err, res) ->
+                if res.length == 2
+                    bot.getDMChannel(victim.id)
+                        .then (chan) -> main.sendEmbed chan, """
+                                                             :warning:   **WARNING**
+
+                                                             You got reported **2 times** now on this guild by a staff member.
+                                                             If you will show any rule-violating behaviour again, **you will be kicked or banned!**
+
+                                                             Remember: Reports will **never** expire and will be always visible in your profile, also
+                                                             all reports of you can be displayed every user with the `!report info` command.
+                                                             Reports will not disappear if you quit and rejoin the guild!
+                                                             """, null, main.color.red
