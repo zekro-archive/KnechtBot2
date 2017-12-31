@@ -9,7 +9,7 @@ const colors = require("colors");
 const aload = require('after-load');
 var config = null;
 
-var VERSION = "2.4.C";
+var VERSION = "2.6.C";
 // Extending version with number of commits from github master branch
 VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
 
