@@ -28,7 +28,7 @@ function setBot(_bot) {
 function check(msg) {
     var memb = msg.member
     var cont = msg.content
-    if (_maxperm(memb) < 1) {
+    if (_maxperm(memb) < 5) {
         var linkflags = !flags.links ? [] : flags.links
         if (cont.contains(linkflags) && cont.contains(['http://', 'https://', 'www.'])) {
             bot.deleteMessage(msg.channel.id, msg.id, `Not allowed content: ${type.BLACKLISTED_LINK}`)
@@ -38,6 +38,10 @@ function check(msg) {
             )
             bot.getDMChannel(memb.id)
                 .then((chan) => main.sendEmbed(chan, "Sending flaged links **is absolutly not allowed** on this guild, so your message got deleted and an the flag was saved in the database.", "NOT ALLOWED LINK", main.color.red))
+            main.sendEmbed(bot.guilds.array()[0].channels.find(c => c.id == main.kerbholzid),
+                           `Flagged unallowed link-containing message from user **${memb.username}** in channel <#${channel.id}> \`\`\`\`\`\``,
+                           "FLAGGED LINK MESSAGE",
+                           main.color.orange)  
         }
     }
 }
@@ -48,7 +52,7 @@ function edit(msg, args) {
         return
     }
     else if (args[0] == "list") {
-        var linkflags = !flags.links ? [] : flags.links
+        var linkflags = !flags.links ? ["no links flagged"] : flags.links
         main.sendEmbed(msg.channel, "Current links on flaglist:\n```" + linkflags.join('\n') + "```", null, main.color.green)
         return
     }

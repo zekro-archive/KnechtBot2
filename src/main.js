@@ -7,6 +7,7 @@ const cmds = require("./cmds.coffee");
 const funcs = require("./funcs.coffee");
 const colors = require("colors");
 const aload = require('after-load');
+const chatflag = require("./chatflag.js")
 var config = null;
 
 var VERSION = "2.6.C";
@@ -55,7 +56,8 @@ const COMMANDS = {
     "nots":     [cmds.notification, "Let you get notificated if you user bot goes offline", 1],
     "exec":     [cmds.exec, "Just for testing purposes, privately for zekro ;)", 4],
     "kick":     [cmds.kick, "Kick a member from the guild", 3],
-    "ban":      [cmds.ban, "ban a member from the guild", 4]
+    "ban":      [cmds.ban, "ban a member from the guild", 4],
+    "flaglinks": [chatflag.edit, "Edit flaged links", 2]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -149,10 +151,11 @@ bot.on('ready', () => {
 // Message listener
 bot.on('messageCreate', (msg) => {
     var cont = msg.content;
-
+    
     // Adding ammount of XP from message length to message sender
     try {
         if (msg.channel.type == 0) {
+            chatflag.check(msg);
             // Thats a little mathematical function to control xp gain in relation to message lenght
             xmammount = parseInt(Math.log((cont.length / config["exp"]["flatter"]) + config["exp"]["cap"]) * config["exp"]["xpmsgmultiplier"]);
             if (xmammount > 0)
