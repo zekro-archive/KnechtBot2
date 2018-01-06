@@ -237,20 +237,25 @@ exports.prefix = (msg, args) ->
                         return
                     main.sendEmbed chan, "Prefix successfully set to `#{prefix}`!", "Error", main.color.green
 
-
-    if args.length < 2
+    send_help = ->
         main.sendEmbed chan, """
                              `!prefix list`  -  List all bots with theirs prefixes
                              `!prefix <BotID> <Prefix>`
                              """, "USAGE:", main.color.red
+
+    if args.length < 1
+        send_help()
     else
         if args[0] == "list"
             listbots sender, chan
             return
-        botid = args[0]
-        ownerid = sender.id
-        prefix = args[1]
-        set()
+        if args.length < 2
+            botid = args[0]
+            ownerid = sender.id
+            prefix = args[1]
+            set()
+        else
+            send_help()
 
 
 listbots = (sender, chan) ->
