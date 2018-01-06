@@ -239,7 +239,10 @@ exports.prefix = (msg, args) ->
 
 
     if args.length < 2
-        listbots sender, chan
+        main.sendEmbed chan, """
+                             `!prefix list`  -  List all bots with theirs prefixes
+                             `!prefix <BotID> <Prefix>`
+                             """, "USAGE:", main.color.red
     else
         if args[0] == "list"
             listbots sender, chan

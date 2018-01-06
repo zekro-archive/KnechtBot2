@@ -285,7 +285,7 @@ exports.formatTime = (timestamp) => {
     }
     var date = new Date(timestamp),
         y = date.getFullYear(),
-        m = btf(date.getMonth()),
+        m = btf(date.getMonth() + 1),
         d = btf(date.getDate()),
         h = btf(date.getHours()),
         min = btf(date.getMinutes()),
