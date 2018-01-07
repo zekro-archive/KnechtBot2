@@ -235,7 +235,7 @@ exports.prefix = (msg, args) ->
                     if err or res == null or res.length == 0
                         main.sendEmbed chan, "There occured an error setting the prefix.", "Error", main.color.red
                         return
-                    main.sendEmbed chan, "Prefix successfully set to `#{prefix}`!", "Error", main.color.green
+                    main.sendEmbed chan, "Prefix successfully set to `#{prefix}`!", "Set prefix", main.color.green
 
     send_help = ->
         main.sendEmbed chan, """
@@ -248,8 +248,7 @@ exports.prefix = (msg, args) ->
     else
         if args[0] == "list"
             listbots sender, chan
-            return
-        if args.length < 2
+        else if args.length == 2
             botid = args[0]
             ownerid = sender.id
             prefix = args[1]
