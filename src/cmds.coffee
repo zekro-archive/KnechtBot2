@@ -939,7 +939,8 @@ exports.notification = (msg, args) ->
 
             bot.deleteMessage chan.id, msg.id
 
-
+# Exec command
+# Currently not working as wanted...
 exports.exec = (msg, args) ->
     if !funcs.checkPerm msg.member, 4, msg.channel
         return
@@ -959,11 +960,16 @@ exports.exec = (msg, args) ->
     ), 500
 
 
+# Kick command: '!kick <UserID> -r <Reason>'
+# Kick someone from the discord with a reason attached.
+# The kick + reson will be shown in the 'Kerbholz' channel
+# Also the victim will receive a message that he got kicked
+# including the reason.
 exports.kick = (msg, args) ->
     if !funcs.checkPerm msg.member, 3, msg.channel
         return
 
-    if args.length < 3 || args.join(' ').split('-r ').length < 2
+    if args.length < 3 || args.join(' ').split('-r ').length < 2 || args.join(' ').indexOf(' -r ') == -1
         main.sendEmbed msg.channel, "`!kick <UserID> -r <Reason>`", "USAGE:", main.color.red
 
     guild = msg.member.guild
@@ -1032,11 +1038,16 @@ exports.kick = (msg, args) ->
                                                              """, null, main.color.red
 
 
+# Kick command: '!ban <UserID> -r <Reason>'
+# Ban someone from the discord with a reason attached.
+# The ban + reson will be shown in the 'Kerbholz' channel
+# Also the victim will receive a message that he got baned
+# including the reason.
 exports.ban = (msg, args) ->
     if !funcs.checkPerm msg.member, 4, msg.channel
         return
 
-    if args.length < 3 || args.join(' ').split('-r ').length < 2
+    if args.length < 3 || args.join(' ').split('-r ').length < 2 || args.join(' ').indexOf(' -r ') == -1
         main.sendEmbed msg.channel, "`!ban <UserID> -r <Reason>`", "USAGE:", main.color.red
 
     guild = msg.member.guild
@@ -1103,3 +1114,42 @@ exports.ban = (msg, args) ->
                                                              all reports of you can be displayed every user with the `!report info` command.
                                                              Reports will not disappear if you quit and rejoin the guild!
                                                              """, null, main.color.red
+
+
+# Log command: '!log'
+#              '!log clear'
+exports.log = (msg, args) ->
+    if !funcs.checkPerm msg.member, 2, msg.channel
+        return
+
+    logloc = main.config.loglocation
+    logadress = main.config.logadress
+    logfile = 'screenlog.0'
+
+    if args.length == 0
+        if fs.existsSync(logfile)
+            fs.createReadStream(logfile).pipe(fs.createWriteStream("""#{logloc}/current.txt"""))
+            main.sendEmbed msg.channel,
+                           """
+                           Created online log file:
+                           :link:  **[latest log](#{logadress}/current.txt)**
+                           """, null, main.color.cyan
+        else
+            main.sendEmbed msg.channel,
+                           """
+                           There are no logfiles to display.
+                           """, "Error", main.color.red
+    else if args[0] == "clear"
+        if !funcs.checkPerm msg.member, 3, msg.channel
+            return
+        fs.unlink(logfile)
+        main.sendEmbed msg.channel,
+                           """
+                           Successfully cleared logfile.
+                           """, null, main.color.gold
+    else
+        main.sendEmbed msg.channel,
+                           """
+                           `!log` - Display latest log
+                           `!log clear` - Clear local logfile
+                           """, "Usage", main.color.red

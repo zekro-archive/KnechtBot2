@@ -115,12 +115,13 @@ checkprefix = (ubot, kick) ->
 
 
 ###
-If a bor gets kicked, this will remove its entry from mySQL databse
+If a bot gets kicked, this will remove its entry from mySQL databse
 and will remove bot owner role from the user who was invited the bot.
 If the kicked one is a member, which is also a bot owner on the guild,
 all his bots will be unregistered and kicked from the guild.
 ###
 exports.removebot = (ubot) ->
+    ownerid = null
     if ubot.bot
         main.dbcon.query 'SELECT * FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
             if typeof res == "undefined"
@@ -134,7 +135,11 @@ exports.removebot = (ubot) ->
                 console.log "OWNER ID: #{ownerid}"
                 main.dbcon.query 'DELETE FROM userbots WHERE botid = ?', [ubot.id], (err, res) ->
                     if !err
-                        bot.removeGuildMemberRole ubot.guild.id, ownerid, "324537251071787009"
+                        # checking again if the owner has any other registered bot. If not, he will lose
+                        # the botowner role, else not.
+                        main.dbcon.query 'SELECT * FROM userbots WHERE ownerid = ?', [ownerid], (err, res) ->
+                            if !err and res.length == 0
+                                bot.removeGuildMemberRole ubot.guild.id, ownerid, "324537251071787009"
     else
         main.dbcon.query 'SELECT * FROM userbots WHERE ownerid = ?', [ubot.id], (err, res) ->
             if typeof res == "undefined"
