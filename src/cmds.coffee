@@ -539,7 +539,7 @@ exports.user = (msg, args) ->
                                     }
                                     {
                                         name: "Reports"
-                                        value: orEmpty "#{if reports == 0 then "This user has a white west!" else "**#{reports} reports** in past."}"
+                                        value: orEmpty "#{if reports == 0 then "This user has a white west!" else "[**#{reports} reports** in past.](https://zekro.de/serverreps?victim=#{user.id})"}"
                                         inline: false
                                     }
                                     {
