@@ -58,7 +58,8 @@ const COMMANDS = {
     "kick":      [cmds.kick, "Kick a member from the guild", 3],
     "ban":       [cmds.ban, "ban a member from the guild", 4],
     "flaglinks": [chatflag.edit, "Edit flaged links", 2],
-    "log":       [cmds.log, "Show latest logs from logfile", 2]
+    "log":       [cmds.log, "Show latest logs from logfile", 2],
+    "role":      [cmds.role, "Display information about roles", 0],
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -264,7 +265,7 @@ function getTime() {
     }
     var date = new Date(),
         y = date.getFullYear(),
-        m = btf(date.getMonth()),
+        m = btf(date.getMonth() + 1),
 	d = btf(date.getDate()),
 	h = btf(date.getHours()),
 	min = btf(date.getMinutes()),
