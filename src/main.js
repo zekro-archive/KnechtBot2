@@ -10,7 +10,7 @@ const aload = require('after-load');
 const chatflag = require("./chatflag.js")
 var config = null;
 
-var VERSION = "2.6.C";
+var VERSION = "2.7.C";
 // Extending version with number of commits from github master branch
 VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
 
