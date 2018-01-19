@@ -135,6 +135,7 @@ Adding dev language roles to sender.
 Roles will be get out of an online pastebin text file.
 ###
 exports.dev = (msg, args) ->
+    args = args.map (a) -> a.toLowerCase()
     memb = msg.member
     chan = msg.channel
     guild = memb.guild
@@ -538,7 +539,7 @@ exports.user = (msg, args) ->
                                     }
                                     {
                                         name: "Reports"
-                                        value: orEmpty "#{if reports == 0 then "This user has a white west!" else "**#{reports} reports** in past."}"
+                                        value: orEmpty "#{if reports == 0 then "This user has a white west!" else "[**#{reports} reports** in past.](https://zekro.de/serverreps?victim=#{user.id})"}"
                                         inline: false
                                     }
                                     {
@@ -1153,3 +1154,115 @@ exports.log = (msg, args) ->
                            `!log` - Display latest log
                            `!log clear` - Clear local logfile
                            """, "Usage", main.color.red
+
+
+exports.role = (msg, args) ->
+    guild = msg.member.guild
+    if args.length < 1
+        main.sendEmbed msg.channel,
+                       "`!role <@mention/ID/Name>`",
+                       "USAGE:",
+                       main.color.red
+        return
+    if msg.roleMentions.length > 0
+        role = guild.roles.find (r) -> r.id == msg.roleMentions[0]
+    else
+        role = guild.roles.find (r) -> r.id == args[0]
+        if !role
+            role = guild.roles.find (r) -> r.name.toLowerCase().indexOf(args.join(" ").toLowerCase()) > -1
+    if !role
+        main.sendEmbed msg.channel,
+                       """Can not find any role with the identifier ```#{args.join(" ")}```""",
+                       "ERROR",
+                       main.color.red
+    else
+        role_membs = guild.members.filter((m) -> m.roles.indexOf(role.id) > -1)
+
+        pad = (str, len) ->
+            while str.length < len
+                str += " "
+            return str
+
+        pad_hex = (str) ->
+            while str.length < 6
+                str = "0" + str
+            return str
+
+        get_perms = () ->
+            p = role.permissions.json
+            roleset =
+                createInstantInvite: "CREATE_INSTANT_INVITE" 
+                kickMembers: "KICK_MEMBERS"
+                banMembers: "BAN_MEMBERS"
+                administrator: "ADMINISTRATOR"
+                manageChannels: "MANAGE_CHANNELS"
+                manageGuild: "MANAGE_GUILD"
+                addReactions: "ADD_REACTIONS"
+                readMessages: "VIEW_CHANNEL"
+                sendMessages: "SEND_MESSAGES"
+                sendTTSMessages: "SEND_TTS_MESSAGES"
+                manageMessages: "MANAGE_MESSAGES"
+                embedLinks: "EMBED_LINKS"
+                attachFiles: "ATTACH_FILES"
+                readMessageHistory: "READ_MESSAGE_HISTORY"
+                mentionEveryone: "MENTION_EVERYONE"
+                externalEmojis: "USE_EXTERNAL_EMOJIS"
+                voiceConnect: "CONNECT"
+                voiceSpeak: "SPEAK"
+                voiceMuteMembers: "MUTE_MEMBERS"
+                voiceDeafenMembers: "DEAFEN_MEMBERS"
+                voiceMoveMembers: "MOVE_MEMBERS"
+                voiceUseVAD: "USE_VAD"
+                changeNickname: "CHANGE_NICKNAME"
+                manageNicknames: "MANAGE_NICKNAMES"
+                manageRoles: "MANAGE_ROLES"
+                manageWebhooks: "MANAGE_WEBHOOKS"
+                manageEmojis: "MANAGE_EMOJIS"
+            return Object.keys p
+                .map (k) -> """#{pad k, 19} (#{if k of roleset then roleset[k] else "N/A"})"""
+                .join "\n"
+
+        perms = get_perms()
+
+        emb =
+            embed:
+                title: """#{role.name}  -  Role Information"""
+                color: if role.color then role.color else 0xFFFFFF
+                fields: [
+                    {
+                        name: "Name"
+                        value: role.name
+                        inline: true
+                    }
+                    {
+                        name: "ID"
+                        value: role.id
+                        inline: true
+                    }
+                    {
+                        name: "Created at"
+                        value: main.formatTime(role.createdAt)
+                        inline: true
+                    }
+                    {
+                        name: "Mentionable"
+                        value: if role.mentionable then ":white_check_mark:" else ":x:"
+                        inline: true
+                    }
+                    {
+                        name: "Color"
+                        value: if role.color then """#{role.color} (##{pad_hex(role.color.toString(16).toUpperCase())})""" else "*none*"
+                        inline: true
+                    }
+                    {
+                        name: "Members in Role"
+                        value: if role_membs then role_membs.length else "0"
+                        inline: true
+                    }
+                    {
+                        name: "Permissions"
+                        value: """```#{if perms.length > 0 then perms else "*none*"}```"""
+                        inline: false
+                    }
+                ]
+        bot.createMessage msg.channel.id, emb

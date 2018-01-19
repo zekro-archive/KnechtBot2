@@ -10,7 +10,7 @@ const aload = require('after-load');
 const chatflag = require("./chatflag.js")
 var config = null;
 
-var VERSION = "2.6.C";
+var VERSION = "2.7.C";
 // Extending version with number of commits from github master branch
 VERSION += parseInt(aload.$(aload("https://github.com/zekroTJA/KnechtBot2"))('li[class="commits"]').text());
 
@@ -267,7 +267,7 @@ function getTime() {
     }
     var date = new Date(),
         y = date.getFullYear(),
-        m = btf(date.getMonth()),
+        m = btf(date.getMonth() + 1),
 	d = btf(date.getDate()),
 	h = btf(date.getHours()),
 	min = btf(date.getMinutes()),
