@@ -31,6 +31,11 @@ var token = config.token;
 var PREFIX  = config.prefix;
 exports.botprefix = config.botprefix
 
+
+// Creating bot instance
+const bot = new Eris(token);
+
+
 // Commands list with invokes
 const COMMANDS = {
     "test":      [cmds.test, "just for testing", 4],
@@ -59,7 +64,7 @@ const COMMANDS = {
     "ban":       [cmds.ban, "ban a member from the guild", 4],
     "flaglinks": [chatflag.edit, "Edit flaged links", 2],
     "log":       [cmds.log, "Show latest logs from logfile", 2],
-    "role":      [cmds.role, "Display information about roles", 0],
+    "eval":      [require("./eval.js").get(bot), "Evaluate code via command", 3],
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -116,13 +121,10 @@ console.log(`\nKnechtBot V2 running on version ${VERSION}\n` +
             `All rights reserved.\n\n`); 
 info(`Starting up and logging in...`);
 
-
-// Creating bot instance
-const bot = new Eris(token);
-
 // Giving bot instance to cmds and funcs script
 cmds.setBot(bot);
 funcs.setBot(bot);
+
 
 /*
     +-------------------+
