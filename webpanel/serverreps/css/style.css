@@ -1,0 +1,64 @@
+/*
+CREATED BY 
+Skillkiller (github.com/skillkiller), 
+Argex, 
+Lucsoft (github.com/lucsoft), 
+zekro (github.com/zekrotja)
+© 2018 zekro's Dev-Schuppen (discord.zekro.de)
+*/
+
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:100,200,400');
+
+:root {
+  --cl-head-bg: #283593;
+  --cl-reason-bg: #263238;
+  --cl-date-bg: #0D47A1;
+  --cl-font: white;
+}
+
+h1 {
+  font-weight: 200;
+}
+
+.grid {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+.kopf {
+  margin-bottom: 5px;
+  background: var(--cl-head-bg);
+  border: 1px solid #ffffff;
+  color: var(--cl-font);
+  margin-left: auto;
+  margin-right: auto;
+  width: auto;
+  height: auto;
+  padding-left: 20px;
+}
+
+.report {
+  display: flex;
+  border-style: solid;
+  border-color: gray;
+  border-width: 1px;
+  background: var(--cl-reason-bg);
+  width: 100%;
+  height: auto;
+  margin-bottom: 5px;
+}
+.grund {
+  color: var(--cl-font);
+  padding: 5px 0 5px 5px;
+}
+
+.datum {
+  margin-right: 5px;
+  color: var(--cl-font);
+  background: var(--cl-date-bg);
+  width: 225px;
+  padding: 5px 0 5px 5px;
+}
+
+.datum tbody tr:hover, tfoot tr:hover {
+  background-color: #000051;
+}
