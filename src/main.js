@@ -8,6 +8,7 @@ const funcs = require("./funcs.coffee");
 const colors = require("colors");
 const aload = require('after-load');
 const chatflag = require("./chatflag.js")
+const stats = require('./stats')
 var config = null;
 
 var VERSION = "2.7.C";
@@ -124,6 +125,7 @@ info(`Starting up and logging in...`);
 // Giving bot instance to cmds and funcs script
 cmds.setBot(bot);
 funcs.setBot(bot);
+stats.setBot(bot);
 
 
 /*
@@ -268,10 +270,10 @@ function getTime() {
     var date = new Date(),
         y = date.getFullYear(),
         m = btf(date.getMonth() + 1),
-	d = btf(date.getDate()),
-	h = btf(date.getHours()),
-	min = btf(date.getMinutes()),
-    s = btf(date.getSeconds());
+	    d = btf(date.getDate()),
+	    h = btf(date.getHours()),
+	    min = btf(date.getMinutes()),
+        s = btf(date.getSeconds());
     return `${d}.${m}.${y} - ${h}:${min}:${s}`;
 }
 
