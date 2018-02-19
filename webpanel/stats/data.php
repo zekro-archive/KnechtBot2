@@ -1,30 +1,27 @@
 <?php
 
+require 'secrets.php';
+
 header('Content-Type: application/json');
 
-define('DB_HOST', '');
-define('DB_USERNAME', '');
-define('DB_PASSWORD', '');
-define('DB_NAME', '');
+
+$pdo = new PDO(
+    'mysql:host=' . DB_HOST . ';' .
+    'dbname=' . DB_NAME . ';',
+    DB_USERNAME,
+    DB_PASSWORD
+);
 
 
-$mysqli = new mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
-
-if(!$mysqli){
-	die("Connection failed: " . $mysqli->error);
-}
-
-$query = sprintf("SELECT * FROM test");
-
-$result = $mysqli->query($query);
+$query = 'SELECT * FROM stats';
 
 $data = array();
-foreach ($result as $row) {
-	$data[] = $row;
+
+$res = $pdo->query($query);
+
+
+foreach ($res as $row) {
+    $data[] = $row;
 }
-
-$result->close();
-
-$mysqli->close();
 
 print json_encode($data);

@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>ChartJS - LineGraph</title>
+		<?php 
+			// HTTPS redirect
+			if (!isset($_SERVER['HTTPS']))
+				header("Location: https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]")
+		?>
+
+		<title>knechtV2 Webpanel | User Stats</title>
 		<style>
 			.chart-container {
 				width: auto;
 				height: auto;
+				margin: 10px 100px 10px 10px;
 			}
 		</style>
+		<link rel="shortcut icon" type="image/png" href="../src/favicon.png"/>
 	</head>
 	<body>
 		<div class="chart-container">
