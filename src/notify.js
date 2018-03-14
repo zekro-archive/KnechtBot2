@@ -9,10 +9,9 @@ function ex(msg, args) {
     let memb = msg.member
     let chan = msg.channel
 
-    if (!funcs.checkPerm(memb, 4, chan))
-        return;
-
     if (args[0] && args[0] == 'all') {
+        if (!funcs.checkPerm(memb, 4, chan))
+            return;        
         let i = 0
         memb.guild.members.forEach(m => {
             if (!m.bot)
