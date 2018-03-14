@@ -65,6 +65,7 @@ const COMMANDS = {
     "flaglinks": [chatflag.edit, "Edit flaged links", 2],
     "log":       [cmds.log, "Show latest logs from logfile", 2],
     "eval":      [require("./eval.js").get(bot), "Evaluate code via command", 3],
+    "notify":    [require('./notify.js').ex, "Enable/Disable notification role", 0],
 }
 
 // Getting role settings (permlvl, prefix) of config.json
