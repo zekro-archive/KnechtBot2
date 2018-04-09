@@ -10,6 +10,7 @@ const aload = require('after-load');
 const chatflag = require("./chatflag.js")
 const stats = require('./stats')
 var config = null;
+var notify = require('./notify.js')
 
 var VERSION = "2.7.C";
 // Extending version with number of commits from github master branch
@@ -66,6 +67,7 @@ const COMMANDS = {
     "flaglinks": [chatflag.edit, "Edit flaged links", 2],
     "log":       [cmds.log, "Show latest logs from logfile", 2],
     "eval":      [require("./eval.js").get(bot), "Evaluate code via command", 3],
+    "notify":    [notify.ex, "Enable/Disable notification role", 0],
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -126,6 +128,7 @@ info(`Starting up and logging in...`);
 cmds.setBot(bot);
 funcs.setBot(bot);
 stats.setBot(bot);
+notify.setBot(bot);
 
 
 /*
