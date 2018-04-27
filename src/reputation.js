@@ -45,11 +45,31 @@ exports.cmd = (msg, args) => {
 
     if (!args[0]) {
         getRep(memb).then(rep => {
-            main.sendEmbed(chan, 'Your Reputation: ```' + rep + '```', null, main.color.green)
+            main.sendEmbed(chan, 'Your Reputation: ```' + rep + '```', 'Reputation', main.color.green)
         }).catch(err => {
-            main.sendEmbed(chan, 'An error occured ```' + err + '```', null, main.color.red)
+            main.sendEmbed(chan, 'An error occured ```' + err + '```', 'Error', main.color.red)
         })
+        return
     }
+    
+    var target = memb.guild.members.find(m => 
+        m.id == args[0].replace(/[<@!>]/gm, '') ||
+        m.id == args[0] ||
+        m.username.toLowerCase() == args[0].toLowerCase() ||
+        m.username.toLowerCase().startsWith(args[0].toLowerCase()) ||
+        m.username.toLowerCase().indexOf(args[0].toLowerCase()) > -1
+    )
+
+    if (!target) {
+        main.sendEmbed(chan, 'Can not fetch any member to the entered query ```' + args[0] + '```', 'Error', main.color.red)
+        return
+    }
+
+    getRep(target).then(rep => {
+        main.sendEmbed(chan, target.username + '\'s Reputation: ```' + rep + '```', 'Reputation', main.color.green)
+    }).catch(err => {
+        main.sendEmbed(chan, 'An error occured ```' + err + '```', 'Error', main.color.red)
+    })
 
 }
 
