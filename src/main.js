@@ -11,6 +11,7 @@ const chatflag = require("./chatflag.js")
 const stats = require('./stats')
 var config = null;
 var notify = require('./notify.js')
+var rep = require('./reputation')
 
 var VERSION = "2.7.C";
 // Extending version with number of commits from github master branch
@@ -68,6 +69,7 @@ const COMMANDS = {
     "log":       [cmds.log, "Show latest logs from logfile", 2],
     "eval":      [require("./eval.js").get(bot), "Evaluate code via command", 3],
     "notify":    [notify.ex, "Enable/Disable notification role", 0],
+    "rep":       [rep.cmd, "Get your current reputation", 0]
 }
 
 // Getting role settings (permlvl, prefix) of config.json
@@ -161,6 +163,8 @@ bot.on('ready', () => {
 bot.on('messageCreate', (msg) => {
     var cont = msg.content;
     
+    rep.msgSend(msg)
+
     // Adding ammount of XP from message length to message sender
     try {
         if (msg.channel.type == 0) {
@@ -232,7 +236,10 @@ bot.on('presenceUpdate', (other, oldPresence) => {
 })
 
 bot.on('messageReactionAdd', (msg, emote, userid) => {
-    if (userid != bot.user.id && msg.id == exports.welcmsg.id)
+    if (userid == bot.user.id)
+        return
+    rep.reaction(msg, emote, userid)
+    if (msg.id == exports.welcmsg.id)
         funcs.welcMsgAccepted(msg, emote, userid)
 })
 
